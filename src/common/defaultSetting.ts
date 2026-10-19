@@ -119,6 +119,8 @@ const defaultSetting: LX.AppSetting = {
   'list.addMusicLocationType': 'top',
   'list.actionButtonsVisible': false,
 
+  'localMusic.directory': '',
+
   'download.enable': false,
   'download.isSavePathGroupByListName': false,
   'download.savePath': path.join(os.homedir(), 'Desktop'),

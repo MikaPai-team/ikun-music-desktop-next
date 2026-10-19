@@ -8,8 +8,9 @@ import {
   arrPushByPosition,
   arrShuffle,
 } from '@common/utils/common'
-import { joinPath, saveStrToFile } from '@common/utils/nodejs'
+import { extname, joinPath, saveStrToFile } from '@common/utils/nodejs'
 import { createLocalMusicInfo } from '@renderer/utils/music'
+import fs from 'node:fs/promises'
 
 /**
  * 过滤列表中已播放的歌曲
@@ -338,6 +339,32 @@ export const createSortedList = (list: LX.Music.MusicInfo[], position: number, i
   list = list.filter((mInfo) => map.has(mInfo.id))
   arrPushByPosition(list, infos, Math.min(position, list.length))
   return list
+}
+
+/**
+ * 递归获取目录下的音频文件路径
+ * @param dirPath 目录路径
+ */
+export const getLocalMusicFiles = async (dirPath: string): Promise<string[]> => {
+  const list: string[] = []
+  const audioExts = new Set(['.mp3', '.flac', '.ogg', '.oga', '.wav', '.m4a'])
+  const walk = async (dir: string, isRoot: boolean) => {
+    const entries = await fs.readdir(dir, { withFileTypes: true }).catch((err) => {
+      if (isRoot) throw err
+      return null
+    })
+    if (!entries) return
+    for (const entry of entries) {
+      const filePath = joinPath(dir, entry.name)
+      if (entry.isDirectory()) {
+        await walk(filePath, false)
+      } else if (entry.isFile() && audioExts.has(extname(entry.name).toLowerCase())) {
+        list.push(filePath)
+      }
+    }
+  }
+  await walk(dirPath, true)
+  return list.sort()
 }
 
 /**

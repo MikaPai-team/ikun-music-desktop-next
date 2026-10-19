@@ -538,6 +538,11 @@ declare global {
       'list.actionButtonsVisible': boolean
 
       /**
+       * 本地歌曲目录
+       */
+      'localMusic.directory': string
+
+      /**
        * 是否启用下载功能
        */
       'download.enable': boolean
