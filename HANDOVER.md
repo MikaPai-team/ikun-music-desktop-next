@@ -1,8 +1,20 @@
 # 项目交接
 
-更新日期：2026-10-19
+更新日期：2026-11-03
 
 ## 当前改动
+
+- 修复切歌时旧曲渐出被执行两遍：`src/renderer/plugins/player/index.ts`。`handlePlay()` 会先后调用 `setStop()` 和 `setMusicUrl → setResource()`，两者各自对旧曲启动一段切歌渐出，第二段用 `clearFade()` 顶掉第一段并从当前音量重新渐出，导致旧曲可闻时长约为两段渐出之和。现让两者共用同一段渐出：`setStop` 渐出结束的回调改为新增的 `finishSwitchFade`（有待换源的 `pendingSrc` 就接上新歌，否则停止）；`setResource` 在 `isSwitchFadeRunning` 为真时只存 `pendingSrc` 并返回，不再另起渐出。
+- 修复压缩器开关无效：`src/renderer/plugins/player/index.ts` 的 `initConvolver()`。`convolverDynamicsCompressor` 一直在干声通路上，却沿用 DynamicsCompressor 的默认参数（threshold -24 / ratio 12 / knee 30），等于常开重压，把真正的用户压缩器 `compressorNode` 的效果盖掉。现把它改成 -1dB 的峰值限制器（threshold -1 / knee 0 / ratio 20 / attack 0.001 / release 0.1），只在逼近 0dBFS 的瞬时峰值介入给混响防削顶，正常电平直通，用户压缩器滑块重新可闻。
+
+## 本次验证与状态
+
+- 仅做静态核对：改动只引用已有符号（`applyPendingSrc`/`stopAudio`/`isSwitchFadeRunning`/`convolverDynamicsCompressor`），未改节点拓扑。仓库仍无可用 ESLint 配置，`npm run lint` 无法执行；无 type-check 脚本。
+- 未在真实界面或打包产物上听感验证切歌渐出与压缩器；需用户本地跑 `npm run dev` 实听确认。
+- 未提交、未推送；版本号未改。按惯例两处均属 bug 修复，发版时走 `-fix(n)`。
+- 保留未跟踪文件 `full.png` 与微信截图，未动。
+
+## 上一次改动（2026-10-19）
 
 - 新增「本地歌曲」页面（`/local`）：选择本地目录后递归扫描其中的音频文件，解析标签后作为独立列表播放。
 - 支持目录记忆（设置项 `localMusic.directory`）与手动刷新；再次进入页面时若列表为空会自动扫描。

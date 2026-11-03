@@ -363,6 +363,14 @@ const initConvolver = () => {
   convolverSourceGainNode = audioContext.createGain()
   convolverOutputGainNode = audioContext.createGain()
   convolverDynamicsCompressor = audioContext.createDynamicsCompressor()
+  // 这个节点只给混响 wet+dry 求和兜底防削顶，做成 -1dB 的峰值限制器。
+  // 默认参数（threshold -24 / ratio 12）会把干声也一直重压，抢掉真正压缩器的活，
+  // 只在逼近 0dBFS 的瞬间峰值介入，正常电平直通。
+  convolverDynamicsCompressor.threshold.value = -1
+  convolverDynamicsCompressor.knee.value = 0
+  convolverDynamicsCompressor.ratio.value = 20
+  convolverDynamicsCompressor.attack.value = 0.001
+  convolverDynamicsCompressor.release.value = 0.1
   convolver = audioContext.createConvolver()
   convolver.connect(convolverOutputGainNode)
   convolverSourceGainNode.connect(convolverDynamicsCompressor)
@@ -756,6 +764,12 @@ export const setResource = (src: string) => {
   if (!audio) return
   resetCompressorAgc()
   pendingSrc = src
+  // 切歌时 setStop 已经起了一段渐出：复用它，别再起第二段，否则旧曲会被渐出两遍。
+  // finishSwitchFade 会在那段渐出结束时接上这里存的 pendingSrc。
+  if (isSwitchFadeRunning) {
+    isFadeInPending = false
+    return
+  }
   // 上一首还在放就先渐出，等音量到 0 再换源，接歌的接缝才不会是硬切
   if (isVolumeFadeEnabled && !audio.paused) {
     isFadeInPending = false
@@ -810,6 +824,13 @@ const stopAudio = () => {
   audio.removeAttribute('src')
 }
 
+// 切歌/停止渐出结束后：换源在渐出期间到了就接上新歌，否则真停。
+// 这样 setStop 与 setResource 只共用这一段渐出，旧曲不会被渐出两遍。
+const finishSwitchFade = () => {
+  if (pendingSrc != null) applyPendingSrc()
+  else stopAudio()
+}
+
 export const setStop = () => {
   if (!audio) return
   if (isNaturalFadeRunning) {
@@ -819,7 +840,7 @@ export const setStop = () => {
   // 正在播放时先渐出再断源，停止/切歌都不会把声音一刀切掉
   if (isVolumeFadeEnabled && !audio.paused) {
     isFadeInPending = false
-    fadeVolume(0, stopAudio, switchFadeDuration, true)
+    fadeVolume(0, finishSwitchFade, switchFadeDuration, true)
     return
   }
   stopAudio()
