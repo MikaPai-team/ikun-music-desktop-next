@@ -11,7 +11,7 @@
 
 - 仅做静态核对：改动只引用已有符号（`applyPendingSrc`/`stopAudio`/`isSwitchFadeRunning`/`convolverDynamicsCompressor`），未改节点拓扑。仓库仍无可用 ESLint 配置，`npm run lint` 无法执行；无 type-check 脚本。
 - 未在真实界面或打包产物上听感验证切歌渐出与压缩器；需用户本地跑 `npm run dev` 实听确认。
-- 未提交、未推送；版本号未改。按惯例两处均属 bug 修复，发版时走 `-fix(n)`。
+- 已提交 `6c1e0a6`，按用户要求（不编译）直接推送到 fork：`next` 远端已改指 `https://github.com/MikaPai-team/ikun-music-desktop-next.git`，`git push next main` 成功（`b312280..6c1e0a6`）。版本号未改，按惯例两处均属 bug 修复，发版时走 `-fix(n)`。未建 Release（由用户发布）。
 - 保留未跟踪文件 `full.png` 与微信截图，未动。
 
 ## 上一次改动（2026-10-19）
