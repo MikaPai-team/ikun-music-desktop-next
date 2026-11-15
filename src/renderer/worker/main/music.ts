@@ -87,3 +87,15 @@ export const getMusicFileLyric = async (filePath: string): Promise<LX.Music.Lyri
   if (!lyric) return null
   return parseLyric(lyric.lyric)
 }
+
+export const saveMusicFileLyric = async (filePath: string, lyric: string): Promise<void> => {
+  const lrcPath = path.join(
+    path.dirname(filePath),
+    path.basename(filePath, path.extname(filePath)) + '.lrc'
+  )
+  try {
+    await fs.writeFile(lrcPath, lyric, { encoding: 'utf8', flag: 'wx' })
+  } catch (err: any) {
+    if (err.code != 'EEXIST') throw err
+  }
+}

@@ -279,7 +279,7 @@ const handleNaturalFade = () => {
     return
   }
   // A short track should finish its fade-in instead of being faded out again.
-  if (audio.duration <= fadeDuration || isFadeInPending || fadeTimer != null) return
+  if (audio.duration * 1000 <= fadeDuration || isFadeInPending || fadeTimer != null) return
   if (remaining <= 20 || isNaturalFadeRunning) return
   fadeVolume(0, undefined, Math.max(remaining, 20), false, true)
 }

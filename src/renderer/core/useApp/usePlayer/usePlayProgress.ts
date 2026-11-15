@@ -8,6 +8,7 @@ import {
   getDuration,
   setCurrentTime,
   onVisibilityChange,
+  isSwitchingAudioSource,
 } from '@renderer/plugins/player'
 import { playProgress, setNowPlayTime, setMaxplayTime } from '@renderer/store/player/playProgress'
 import { musicInfo, playMusicInfo, playInfo } from '@renderer/store/player/state'
@@ -140,8 +141,8 @@ export default () => {
   }
 
   const handleSetPlayInfo = () => {
-    // restorePlayTime = playProgress.nowPlayTime
-    setCurrentTime((restorePlayTime = playProgress.nowPlayTime))
+    // 新歌的进度等 playing 时再应用，旧曲还要从当前位置渐出。
+    restorePlayTime = playProgress.nowPlayTime
     // setMaxplayTime(playProgress.maxPlayTime)
     handlePause()
     if (!playMusicInfo.isTempPlay && playMusicInfo.listId) {
@@ -195,6 +196,7 @@ export default () => {
   window.app_event.on('musicToggled', handleSetPlayInfo)
 
   const rOnTimeupdate = onTimeupdate(() => {
+    if (isSwitchingAudioSource()) return
     setNowPlayTime(getCurrentTime())
   })
 

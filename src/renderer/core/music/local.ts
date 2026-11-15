@@ -5,6 +5,7 @@ import { getLocalFilePath } from '@renderer/utils/music'
 
 import {
   buildLyricInfo,
+  existTimeExp,
   getCachedLyricInfo,
   getOnlineOtherSourceLyricByLocal,
   getOnlineOtherSourceLyricInfo,
@@ -191,24 +192,36 @@ export const getLyricInfo = async ({
   isRefresh: boolean
   onToggleSource?: (musicInfo?: LX.Music.MusicInfoOnline) => void
 }): Promise<LX.Player.LyricInfo> => {
+  const saveLocalLyricFile = async (lyricInfo: LX.Music.LyricInfo) => {
+    if (!existTimeExp.test(lyricInfo.lyric)) return
+    try {
+      await window.lx.worker.main.saveMusicFileLyric(musicInfo.meta.filePath, lyricInfo.lyric)
+    } catch (err) {
+      console.warn('保存本地歌词失败，仍使用软件缓存', err)
+    }
+  }
+
   if (!isRefresh) {
     const [lyricInfo, fileLyricInfo] = await Promise.all([
       getCachedLyricInfo(musicInfo),
-      window.lx.worker.main.getMusicFileLyric(musicInfo.meta.filePath),
+      window.lx.worker.main.getMusicFileLyric(musicInfo.meta.filePath).catch(() => null),
     ])
     // console.log(lyricInfo, fileLyricInfo)
     if (lyricInfo?.lyric && lyricInfo.lyric != fileLyricInfo?.lyric) {
       // 存在已编辑歌词
+      if (!fileLyricInfo?.lyric) await saveLocalLyricFile(lyricInfo)
       return buildLyricInfo({ ...lyricInfo, rawlrcInfo: fileLyricInfo ?? lyricInfo.rawlrcInfo })
     }
 
-    if (fileLyricInfo) return buildLyricInfo(fileLyricInfo)
+    if (fileLyricInfo?.lyric.trim()) return buildLyricInfo(fileLyricInfo)
     if (lyricInfo?.lyric) return buildLyricInfo(lyricInfo)
   }
 
   try {
     return await getOnlineOtherSourceLyricByLocal(musicInfo, isRefresh).then(
-      ({ lyricInfo, isFromCache }) => {
+      async ({ lyricInfo, isFromCache }) => {
+        if (!existTimeExp.test(lyricInfo.lyric)) throw new Error('local lyric not found')
+        await saveLocalLyricFile(lyricInfo)
         if (!isFromCache) void saveLyric(musicInfo, lyricInfo)
         return buildLyricInfo(lyricInfo)
       }
@@ -222,6 +235,7 @@ export const getLyricInfo = async ({
       onToggleSource,
       isRefresh,
     }).then(async ({ lyricInfo, musicInfo: targetMusicInfo, isFromCache }) => {
+      await saveLocalLyricFile(lyricInfo)
       void saveLyric(musicInfo, lyricInfo)
 
       if (isFromCache) return buildLyricInfo(lyricInfo)
