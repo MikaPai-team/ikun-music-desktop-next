@@ -10,7 +10,7 @@
 - 项目版本从当前本地 `3.9.0` 同步升级至 `3.10.0`，更新 `package.json` 与 `package-lock.json` 的两处项目版本。
 - 验证：人工阅读调用链与 diff，`git diff --check` 通过；按用户要求未运行测试。新增云端歌词回归用例待执行；既有未跟踪 `local-lyrics.test.cjs` 仅补充关闭新开关的设置模拟，继续留在本地，不纳入提交。41 份不属于本次修改的已有修改 / 调试文件 SHA-256 保持一致。
 - 编译：`npm run build:main`、`npm run build:renderer`、`npm run build:renderer-lyric`、`npm run build:renderer-scripts` 与 `npm run pack:win:setup:x64` 均成功。安装包为 `build/ikun-music-desktop-v3.10.0-x64-Setup.exe`，97,765,624 字节，SHA-256 为 `cfebefd6c49209e3e8697479739c3fb80b20e7fa3a66f35fb74a5805af8deb0d`；包内版本与两份项目文件一致，包内五份主程序 / worker / 歌词 / API 脚本与当前编译输出一致，新开关与云端逻辑已包含；`latest.yml` 的版本、文件名、大小和 SHA-512 核对一致。独立编译四个目标，保留此前安装包。
-- 提交 / 推送：尚未提交或推送。本次提交仅纳入新功能、版本号与本交接条目；此前 Last.fm、界面与播放修改，以及已有未跟踪调试文件继续保留。
+- 提交 / 推送：功能提交 `4be1c9a`（`feat: 本地播放支持默认启用的云端歌词`）已成功推送到 `next/main`（`MikaPai-team/ikun-music-desktop-next`）。本次交接状态补记随文档提交；功能提交仅纳入新功能、版本号与本交接条目，此前 Last.fm、界面与播放修改，以及已有未跟踪调试文件继续保留。
 - 已知限制：尚未验证真实安装、播放、设置持久化和在线匹配；本地安装包包含工作区此前未提交的 Last.fm、界面与播放修改，源码提交仅包含本次功能。其他平台尚未编译；本次未创建 Release 或触发云端发布。
 
 ## 本次修复（2026-11-20，本地筛选持久化与桌面歌词透明背景）
