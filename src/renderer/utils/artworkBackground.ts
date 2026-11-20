@@ -104,27 +104,36 @@ export const getDesktopLyricForeground = (
     Math.min(
       ...samples.map((background) => getContrastRatio(mix(background, color, alpha), background))
     )
-  const unplay = contrast(WHITE) >= contrast(BLACK) ? WHITE : BLACK
-  const opposite = unplay === WHITE ? BLACK : WHITE
-  const choosePair = () => {
-    if (contrast(unplay) < 4.5) return null
-    for (let step = 0; step <= 20; step++) {
-      for (const target of [unplay, opposite]) {
-        const played = round(mix(source, target, step / 20))
-        if (contrast(played) < 4.5) continue
-        const separation = Math.min(
-          ...samples.map((background) =>
-            getContrastRatio(mix(background, played, alpha), mix(background, unplay, alpha))
-          )
-        )
-        if (separation >= 2) return { played }
+  const pickTone = (targetContrast: number, other?: Rgb) => {
+    let best = source
+    let bestScore = -1
+    for (let step = 0; step <= 18; step++) {
+      for (const target of [WHITE, BLACK]) {
+        // 保留至少 10% 原色，明暗校正不退到纯黑 / 纯白。
+        const color = round(mix(source, target, step / 20))
+        if (Math.max(color.r, color.g, color.b) === 0 || Math.min(color.r, color.g, color.b) === 255) continue
+        if (other && color.r === other.r && color.g === other.g && color.b === other.b) continue
+        const ratio = contrast(color)
+        const separation = other
+          ? Math.min(...samples.map((background) =>
+            getContrastRatio(mix(background, color, alpha), mix(background, other, alpha))
+          ))
+          : 2
+        if (ratio >= targetContrast && separation >= 2) return color
+        const score = Math.min(ratio / targetContrast, 1) * 100 + Math.min(separation, 2)
+        if (score > bestScore) {
+          best = color
+          bestScore = score
+        }
       }
     }
-    return null
+    return best
   }
   // shortcut: 混合背景或低透明度无法保证固定对比度，需要精确可读性时再按文字区域取色。
-  const played = choosePair()?.played ?? round(mix(unplay, opposite, 0.35))
-  const shadow = unplay === WHITE ? BLACK : WHITE
+  // 未唱对比度留出逐字填色所需的 2:1 明暗差。
+  const unplay = pickTone(9)
+  const played = pickTone(4.5, unplay)
+  const shadow = getLuminance(unplay) > 0.5 ? BLACK : WHITE
   return {
     played: toCss(played),
     unplay: toCss(unplay),
