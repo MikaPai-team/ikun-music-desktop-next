@@ -10,7 +10,7 @@
 - `package.json` 与 `package-lock.json` 同步由 `3.10.0` 调整为 `3.10.0-fix.1`。中文、繁体中文与英文标签 / 自动说明同步更新。
 - 验证：人工阅读取色、设置持久化和自动切换调用链，`git diff --check` 通过；沿用用户要求未跑测试。新增取色回归测试待执行；已有未跟踪 `desktopLyricColor.check.mjs` 仅更新旧的黑白色断言，继续保留在本地，不纳入提交。43 份无关的已有修改 / 未跟踪文件 SHA-256 保持一致。
 - 编译：`npm run build:main`、`npm run build:renderer`、`npm run build:renderer-lyric`、`npm run build:renderer-scripts` 与 `npm run pack:win:setup:x64` 均成功。生成 `build/ikun-music-desktop-v3.10.0-fix.1-x64-Setup.exe`，97,742,765 字节，SHA-256 为 `fb78b622d7054f0d63c6fdba9f3bd57e90753dc1b591b45dab21bdc9cdc8ead8`。两份项目文件与包内版本一致，包内五份主程序 / worker / 歌词 / API 脚本与本次编译输出一致；新取色算法和三选项主题页已包含，`latest.yml` 的版本、文件名、大小和 SHA-512 均核对一致。
-- 提交 / 推送：尚未提交或推送；本次只纳入动态歌词色调、主题页与三语言文案、版本号、新回归用例和本交接条目，其他既有修改继续留在工作区。本次未创建 Release 或触发云端发布。
+- 提交 / 推送：修复提交 `7988dfe`（`fix: 保留桌面歌词动态色调并简化主题选择`）已成功推送到 `next/main`（`MikaPai-team/ikun-music-desktop-next`）；本次状态补记随交接文档提交。本次只纳入动态歌词色调、主题页与三语言文案、版本号、新回归用例和本交接条目，其他既有修改继续留在工作区。本次未创建 Release 或触发云端发布。
 - 已知限制：尚未验证真实桌面视觉效果与设置交互。旧 Windows、macOS、Linux 无可靠排除歌词窗口的背景采样；混合背景或低透明度无法保证统一对比度，仍用保留原色的明暗调整与细描边处理。本地编译包含此前未提交的改动。
 
 ## 本次功能（2026-11-20，3.10.0，本地云端歌词）
