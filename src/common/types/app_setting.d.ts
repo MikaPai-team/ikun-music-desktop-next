@@ -548,6 +548,11 @@ declare global {
       'localMusic.filterState': string
 
       /**
+       * 本地播放是否始终使用云端匹配歌词
+       */
+      'localMusic.cloudLyric': boolean
+
+      /**
        * 是否启用下载功能
        */
       'download.enable': boolean

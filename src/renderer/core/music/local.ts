@@ -2,6 +2,7 @@ import { encodePath } from '@common/utils/common'
 import { updateListMusics } from '@renderer/store/list/action'
 import { saveLyric, saveMusicUrl } from '@renderer/utils/ipc'
 import { getLocalFilePath } from '@renderer/utils/music'
+import { appSetting } from '@renderer/store/setting'
 
 import {
   buildLyricInfo,
@@ -192,7 +193,11 @@ export const getLyricInfo = async ({
   isRefresh: boolean
   onToggleSource?: (musicInfo?: LX.Music.MusicInfoOnline) => void
 }): Promise<LX.Player.LyricInfo> => {
+  const useCloudLyric = appSetting['localMusic.cloudLyric']
+  if (useCloudLyric) isRefresh = true
+
   const saveLocalLyricFile = async (lyricInfo: LX.Music.LyricInfo) => {
+    if (useCloudLyric) return
     if (!existTimeExp.test(lyricInfo.lyric)) return
     try {
       await window.lx.worker.main.saveMusicFileLyric(musicInfo.meta.filePath, lyricInfo.lyric)
@@ -222,7 +227,7 @@ export const getLyricInfo = async ({
       async ({ lyricInfo, isFromCache }) => {
         if (!existTimeExp.test(lyricInfo.lyric)) throw new Error('local lyric not found')
         await saveLocalLyricFile(lyricInfo)
-        if (!isFromCache) void saveLyric(musicInfo, lyricInfo)
+        if (!useCloudLyric && !isFromCache) void saveLyric(musicInfo, lyricInfo)
         return buildLyricInfo(lyricInfo)
       }
     )
@@ -236,7 +241,7 @@ export const getLyricInfo = async ({
       isRefresh,
     }).then(async ({ lyricInfo, musicInfo: targetMusicInfo, isFromCache }) => {
       await saveLocalLyricFile(lyricInfo)
-      void saveLyric(musicInfo, lyricInfo)
+      if (!useCloudLyric) void saveLyric(musicInfo, lyricInfo)
 
       if (isFromCache) return buildLyricInfo(lyricInfo)
       void saveLyric(targetMusicInfo, lyricInfo)

@@ -601,6 +601,8 @@
   "setting__play_detail_lyric_delay_scroll": "Delay scrolling lyrics",
   "setting__play_detail_lyric_progress": "Allow to adjust playback progress by drag-and-drop lyrics",
   "setting__play_lyric_lxlrc": "Playback with karaoke-style lyrics if available",
+  "setting__local_music_cloud_lyric": "Always use online lyrics for local playback",
+  "setting__local_music_cloud_lyric_tip": "Enabled by default. Match lyrics online by song title, artist or filename, ignoring embedded lyrics and the local lyric cache. Disable to restore the previous behavior. Requires an internet connection; a loading error is shown when no lyrics are found.",
   "setting__play_lyric_lxlrc_tip": "This feature requires higher performance and is not recommended to be turned on for low performance devices!",
   "setting__play_lyric_roma": "Show romanized lyrics if available",
   "setting__play_lyric_s2t": "Convert Chinese lyrics that are playing and downloading to traditional",

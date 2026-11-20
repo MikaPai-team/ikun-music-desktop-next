@@ -601,6 +601,8 @@
   "setting__play_detail_lyric_delay_scroll": "延迟歌词滚动",
   "setting__play_detail_lyric_progress": "允许通过拖拽歌词调整播放进度",
   "setting__play_lyric_lxlrc": "使用卡拉 OK 式歌词播放（如果可用）",
+  "setting__local_music_cloud_lyric": "本地播放始终使用云端歌词",
+  "setting__local_music_cloud_lyric_tip": "默认开启，根据歌名、歌手或文件名在线匹配，忽略文件自带歌词与本地歌词缓存。关闭后恢复原有歌词获取方式；开启时需要联网，未匹配到歌词时显示加载失败。",
   "setting__play_lyric_lxlrc_tip": "此功能比较耗性能，低配置电脑不建议开启！",
   "setting__play_lyric_roma": "显示歌词罗马音（如果可用）",
   "setting__play_lyric_s2t": "将播放与下载的中文歌词转换为繁体",

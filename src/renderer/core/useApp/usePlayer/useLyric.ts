@@ -4,6 +4,8 @@ import { debounce } from '@common/utils/common'
 // import { musicInfo } from '@renderer/store/player/state'
 import { pause, play, setLyric, stop, init, sendInfo, sendPic, setPlaybackRate } from '@renderer/core/lyric'
 import { appSetting } from '@renderer/store/setting'
+import { loadLyric } from '@renderer/core/player'
+import { playMusicInfo } from '@renderer/store/player/state'
 
 const handleApplyPlaybackRate = debounce(setPlaybackRate, 300)
 
@@ -19,6 +21,12 @@ export default () => {
   watch(() => appSetting['player.isShowLyricRoma'], setLyric)
   watch(() => appSetting['player.isSwapLyricTranslationAndRoma'], setLyric)
   watch(() => appSetting['player.isPlayLxlrc'], setLyric)
+  watch(() => appSetting['localMusic.cloudLyric'], () => {
+    const musicInfo = playMusicInfo.musicInfo
+    if (!musicInfo || 'progress' in musicInfo || musicInfo.source != 'local') return
+    stop()
+    loadLyric()
+  })
 
   window.app_event.on('play', play)
   window.app_event.on('pause', pause)

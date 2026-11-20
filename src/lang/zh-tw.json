@@ -601,6 +601,8 @@
   "setting__play_detail_lyric_delay_scroll": "延遲歌詞滾動",
   "setting__play_detail_lyric_progress": "允許透過拖曳歌詞調整播放進度",
   "setting__play_lyric_lxlrc": "使用卡拉 OK 式歌詞播放（如果可用）",
+  "setting__local_music_cloud_lyric": "本機播放一律使用雲端歌詞",
+  "setting__local_music_cloud_lyric_tip": "預設開啟，根據歌名、歌手或檔案名稱線上比對，忽略檔案自帶歌詞與本機歌詞快取。關閉後恢復原有歌詞取得方式；開啟時需要連線，未找到歌詞時顯示載入失敗。",
   "setting__play_lyric_lxlrc_tip": "此功能比較耗性能，低配置電腦不建議開啟！",
   "setting__play_lyric_roma": "顯示歌詞羅馬音（如果可用）",
   "setting__play_lyric_s2t": "將播放與下載的中文歌詞轉換為繁體",

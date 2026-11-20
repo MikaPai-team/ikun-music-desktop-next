@@ -121,6 +121,7 @@ const defaultSetting: LX.AppSetting = {
 
   'localMusic.directory': '',
   'localMusic.filterState': '',
+  'localMusic.cloudLyric': true,
 
   'download.enable': false,
   'download.isSavePathGroupByListName': false,

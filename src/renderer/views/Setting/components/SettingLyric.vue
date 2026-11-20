@@ -3,6 +3,9 @@ dt#lyric {{ $t('setting__lyric') }}
 dd
   div
     .gap-top
+      base-checkbox(id="setting_local_music_cloud_lyric" :model-value="appSetting['localMusic.cloudLyric']" :label="$t('setting__local_music_cloud_lyric')" @update:model-value="updateSetting({ 'localMusic.cloudLyric': $event })")
+      svg-icon(class="help-icon" name="help-circle-outline" :aria-label="$t('setting__local_music_cloud_lyric_tip')")
+    .gap-top
       base-checkbox(id="setting_player_lyric_transition" :model-value="appSetting['player.isShowLyricTranslation']" :label="$t('setting__play_lyric_transition')" @update:model-value="updateSetting({ 'player.isShowLyricTranslation': $event })")
     .gap-top
       base-checkbox(id="setting_player_lyric_roma" :model-value="appSetting['player.isShowLyricRoma']" :label="$t('setting__play_lyric_roma')" @update:model-value="updateSetting({ 'player.isShowLyricRoma': $event })")

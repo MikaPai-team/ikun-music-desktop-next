@@ -186,6 +186,32 @@ export const setMusicUrl = (
     })
 }
 
+let lyricRequestId = 0
+export const loadLyric = () => {
+  const musicInfo = playMusicInfo.musicInfo
+  const requestId = ++lyricRequestId
+  if (!musicInfo) return
+
+  setMusicInfo({ lrc: null, tlrc: null, lxlrc: null, rlrc: null, rawlrc: null })
+  void getLyricInfo({ musicInfo })
+    .then((lyricInfo) => {
+      if (requestId != lyricRequestId || musicInfo !== playMusicInfo.musicInfo) return
+      setMusicInfo({
+        lrc: lyricInfo.lyric,
+        tlrc: lyricInfo.tlyric,
+        lxlrc: lyricInfo.lxlyric,
+        rlrc: lyricInfo.rlyric,
+        rawlrc: lyricInfo.rawlrcInfo.lyric,
+      })
+      window.app_event.lyricUpdated()
+    })
+    .catch((err) => {
+      console.log(err)
+      if (requestId != lyricRequestId || musicInfo !== playMusicInfo.musicInfo) return
+      setAllStatus(window.i18n.t('lyric__load_error'))
+    })
+}
+
 // 恢复上次播放的状态
 const handleRestorePlay = async (restorePlayInfo: LX.Player.SavedPlayInfo) => {
   const musicInfo = playMusicInfo.musicInfo
@@ -208,23 +234,7 @@ const handleRestorePlay = async (restorePlayInfo: LX.Player.SavedPlayInfo) => {
     })
     .catch((_) => _)
 
-  void getLyricInfo({ musicInfo })
-    .then((lyricInfo) => {
-      if (musicInfo.id != playMusicInfo.musicInfo?.id) return
-      setMusicInfo({
-        lrc: lyricInfo.lyric,
-        tlrc: lyricInfo.tlyric,
-        lxlrc: lyricInfo.lxlyric,
-        rlrc: lyricInfo.rlyric,
-        rawlrc: lyricInfo.rawlrcInfo.lyric,
-      })
-      window.app_event.lyricUpdated()
-    })
-    .catch((err) => {
-      console.log(err)
-      if (musicInfo.id != playMusicInfo.musicInfo?.id) return
-      setAllStatus(window.i18n.t('lyric__load_error'))
-    })
+  loadLyric()
 
   if (appSetting['player.togglePlayMethod'] == 'random' && !playMusicInfo.isTempPlay)
     addPlayedList({ ...(playMusicInfo as LX.Player.PlayMusicInfo) })
@@ -263,23 +273,7 @@ const handlePlay = () => {
     })
     .catch((_) => _)
 
-  void getLyricInfo({ musicInfo })
-    .then((lyricInfo) => {
-      if (musicInfo.id != playMusicInfo.musicInfo?.id) return
-      setMusicInfo({
-        lrc: lyricInfo.lyric,
-        tlrc: lyricInfo.tlyric,
-        lxlrc: lyricInfo.lxlyric,
-        rlrc: lyricInfo.rlyric,
-        rawlrc: lyricInfo.rawlrcInfo.lyric,
-      })
-      window.app_event.lyricUpdated()
-    })
-    .catch((err) => {
-      console.log(err)
-      if (musicInfo.id != playMusicInfo.musicInfo?.id) return
-      setAllStatus(window.i18n.t('lyric__load_error'))
-    })
+  loadLyric()
 }
 
 /**
