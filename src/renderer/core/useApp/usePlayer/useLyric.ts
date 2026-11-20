@@ -2,7 +2,7 @@ import { onBeforeUnmount, watch } from '@common/utils/vueTools'
 import { debounce } from '@common/utils/common'
 // import { setDesktopLyricInfo, onGetDesktopLyricInfo } from '@renderer/utils/ipc'
 // import { musicInfo } from '@renderer/store/player/state'
-import { pause, play, setLyric, stop, init, sendInfo, setPlaybackRate } from '@renderer/core/lyric'
+import { pause, play, setLyric, stop, init, sendInfo, sendPic, setPlaybackRate } from '@renderer/core/lyric'
 import { appSetting } from '@renderer/store/setting'
 
 const handleApplyPlaybackRate = debounce(setPlaybackRate, 300)
@@ -26,6 +26,7 @@ export default () => {
   window.app_event.on('error', pause)
   window.app_event.on('musicToggled', setPlayInfo)
   window.app_event.on('lyricUpdated', setLyric)
+  window.app_event.on('picUpdated', sendPic)
   window.app_event.on('setPlaybackRate', handleApplyPlaybackRate)
 
   onBeforeUnmount(() => {
@@ -35,6 +36,7 @@ export default () => {
     window.app_event.off('error', pause)
     window.app_event.off('musicToggled', setPlayInfo)
     window.app_event.off('lyricUpdated', setLyric)
+    window.app_event.off('picUpdated', sendPic)
     window.app_event.off('setPlaybackRate', handleApplyPlaybackRate)
   })
 }

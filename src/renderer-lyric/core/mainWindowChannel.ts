@@ -3,6 +3,7 @@ import { onBeforeUnmount } from '@common/utils/vueTools'
 import { setMusicInfo, setIsPlay } from '../store/action'
 import { pause, play, setLyric, setLyricOffset, setPlaybackRate, stop } from './lyric'
 import { lyrics } from '@lyric/store/lyric'
+import { musicInfo } from '@lyric/store/state'
 
 let mainWindowPort: Electron.IpcRendererEvent['ports'][0] | null = null
 export const sendDesktopLyricInfo = (info: LX.DesktopLyric.WinMainActions) => {
@@ -20,6 +21,7 @@ const handleDesktopLyricMessage = (event: LX.DesktopLyric.LyricActions) => {
         singer: event.data.singer,
         name: event.data.name,
         album: event.data.album,
+        pic: event.data.pic,
       })
       lyrics.lyric = event.data.lrc ?? ''
       lyrics.tlyric = event.data.tlrc
@@ -31,6 +33,10 @@ const handleDesktopLyricMessage = (event: LX.DesktopLyric.LyricActions) => {
           getStatus()
         })
       }
+      break
+    case 'set_pic':
+      if (event.data.id !== musicInfo.id) break
+      setMusicInfo({ pic: event.data.pic })
       break
     case 'set_lyric':
       lyrics.lyric = event.data.lrc ?? ''

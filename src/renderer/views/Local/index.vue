@@ -1,11 +1,14 @@
 <template>
   <div :class="$style.container">
     <div :class="$style.header">
-      <span :class="$style.path" :aria-label="directory">
-        {{ directory || $t('local__no_directory') }}
-      </span>
+      <div :class="$style.heading">
+        <h2>{{ $t('local_songs') }}</h2>
+        <span :class="$style.path" :title="directory">{{
+          directory || $t('local__no_directory')
+        }}</span>
+      </div>
       <div :class="$style.buttons">
-        <base-btn min @click="handleSelectDirectory">
+        <base-btn min :disabled="isScanning" @click="handleSelectDirectory">
           {{ $t('local__select_directory') }}
         </base-btn>
         <base-btn min :disabled="isScanning || !directory" @click="handleScan">
@@ -13,8 +16,52 @@
         </base-btn>
       </div>
     </div>
-    <div :class="$style.main">
-      <music-list :list-id="listId" />
+    <filter-bar
+      v-model:query="query"
+      :filters="filters"
+      :options="options"
+      :total="total"
+      :result-count="resultCount"
+      :has-filters="hasFilters"
+      @filter="setFilter"
+      @clear="clearFilters"
+    />
+    <div v-if="scanError || syncError" :class="$style.error" role="alert">
+      <span>{{ $t(scanError ? 'local__scan_error' : 'local__filter_error') }}</span>
+      <base-btn min @click="scanError ? handleScan() : retrySync()">{{
+        $t('local__retry')
+      }}</base-btn>
+    </div>
+    <div :class="$style.listWrap">
+      <music-list :list-id="viewListId" />
+      <div v-if="isLoading || isScanning || !resultCount" :class="$style.empty">
+        <strong>{{
+          $t(
+            isLoading || isScanning
+              ? 'local__loading'
+              : hasFilters
+                ? 'local__no_results'
+                : 'local__empty_library'
+          )
+        }}</strong>
+        <p>
+          {{
+            $t(
+              isLoading || isScanning
+                ? 'local__loading_hint'
+                : hasFilters
+                  ? 'local__no_results_hint'
+                  : 'local__empty_library_hint'
+            )
+          }}
+        </p>
+        <base-btn
+          v-if="!isLoading && !isScanning"
+          @click="hasFilters ? clearFilters() : handleSelectDirectory()"
+        >
+          {{ $t(hasFilters ? 'local__clear_filter' : 'local__select_directory') }}
+        </base-btn>
+      </div>
     </div>
   </div>
 </template>
@@ -23,9 +70,11 @@
 import { computed, onMounted, ref } from '@common/utils/vueTools'
 import { LIST_IDS } from '@common/constants'
 import { appSetting, updateSetting } from '@renderer/store/setting'
-import { getListMusics, overwriteListMusics } from '@renderer/store/list/action'
+import { overwriteListMusics } from '@renderer/store/list/action'
 import { showSelectDialog } from '@renderer/utils/ipc'
 import MusicList from '../List/MusicList/index.vue'
+import FilterBar from './components/FilterBar.vue'
+import useLocalFilter from './useLocalFilter'
 
 // 放在组件外，防止扫描中切换页面后重复扫描
 const isScanning = ref(false)
@@ -34,20 +83,28 @@ export default {
   name: 'Local',
   components: {
     MusicList,
+    FilterBar,
   },
   setup() {
     const listId = LIST_IDS.LOCAL
+    const viewListId = LIST_IDS.LOCAL_VIEW
     const directory = computed(() => appSetting['localMusic.directory'])
+
+    const localFilter = useLocalFilter({ fullListId: listId, viewListId })
+    const scanError = ref(false)
 
     const scanDirectory = async (dir) => {
       if (!dir || isScanning.value) return
       isScanning.value = true
+      scanError.value = false
       try {
         const filePaths = await window.lx.worker.main.getLocalMusicFiles(dir)
         const musicInfos = await window.lx.worker.main.createLocalMusicInfos(filePaths)
         await overwriteListMusics({ listId, musicInfos })
+        await localFilter.reloadFull()
       } catch (err) {
         console.log(err)
+        scanError.value = true
       } finally {
         isScanning.value = false
       }
@@ -61,6 +118,7 @@ export default {
       })
       if (canceled || !filePaths.length) return
       const dir = filePaths[0]
+      if (dir !== directory.value) localFilter.clearFilters()
       updateSetting({ 'localMusic.directory': dir })
       await scanDirectory(dir)
     }
@@ -68,14 +126,21 @@ export default {
     const handleScan = () => scanDirectory(directory.value)
 
     onMounted(async () => {
-      const list = await getListMusics(listId)
-      if (!list.length && directory.value) void scanDirectory(directory.value)
+      try {
+        const count = await localFilter.reloadFull()
+        if (!count && directory.value) void scanDirectory(directory.value)
+      } catch (error) {
+        console.error(error)
+        scanError.value = true
+      }
     })
 
     return {
-      listId,
+      viewListId,
       directory,
       isScanning,
+      ...localFilter,
+      scanError,
       handleSelectDirectory,
       handleScan,
     }
@@ -98,17 +163,28 @@ export default {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 15px;
+  padding: 16px 18px 14px;
+  flex-wrap: wrap;
 }
 
+.heading {
+  flex: 1;
+  min-width: 160px;
+  h2 {
+    margin: 0 0 6px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-font);
+  }
+}
 .path {
-  flex: auto;
+  display: block;
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   color: var(--color-font-label);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .buttons {
@@ -117,9 +193,48 @@ export default {
   gap: 8px;
 }
 
-.main {
+.listWrap {
   flex: auto;
   min-height: 0;
+  min-width: 0;
   position: relative;
+}
+.empty {
+  position: absolute;
+  inset: 40px 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background: var(--color-content-background);
+  color: var(--color-font);
+  strong {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  p {
+    margin: 10px 0 18px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-font-label);
+  }
+}
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 18px;
+  font-size: 13px;
+  color: var(--color-font);
+  background: var(--color-primary-alpha-900);
+}
+@media (max-width: 700px) {
+  .header {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
 }
 </style>

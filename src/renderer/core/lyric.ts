@@ -49,6 +49,10 @@ export const sendDesktopLyricInfo = (
   if (transferList) desktopLyricPort.postMessage(info, transferList)
   else desktopLyricPort.postMessage(info)
 }
+export const sendPic = () => {
+  sendDesktopLyricInfo({ action: 'set_pic', data: { id: musicInfo.id, pic: musicInfo.pic } })
+}
+
 const handleDesktopLyricMessage = (action: LX.DesktopLyric.WinMainActions) => {
   switch (action) {
     case 'get_info':
@@ -63,7 +67,7 @@ const handleDesktopLyricMessage = (action: LX.DesktopLyric.WinMainActions) => {
           tlrc: musicInfo.tlrc,
           rlrc: musicInfo.rlrc,
           lxlrc: musicInfo.lxlrc,
-          // pic: musicInfo.pic,
+          pic: musicInfo.pic,
           isPlay: isPlay.value,
           line: lyric.line,
           played_time: getCurrentTime(),
@@ -241,7 +245,7 @@ export const sendInfo = () => {
       tlrc: musicInfo.tlrc,
       rlrc: musicInfo.rlrc,
       lxlrc: musicInfo.lxlrc,
-      // pic: musicInfo.pic,
+      pic: musicInfo.pic,
       isPlay: isPlay.value,
       line: lyric.line,
       played_time: getCurrentTime(),

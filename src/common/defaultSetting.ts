@@ -120,6 +120,7 @@ const defaultSetting: LX.AppSetting = {
   'list.actionButtonsVisible': false,
 
   'localMusic.directory': '',
+  'localMusic.filterState': '',
 
   'download.enable': false,
   'download.isSavePathGroupByListName': false,

@@ -158,6 +158,7 @@ const modules = {
     close: 'close',
     set_config: 'set_config',
     get_config: 'get_config',
+    get_background_sample: 'get_background_sample',
     on_config_change: 'on_config_change',
     main_window_inited: 'main_window_inited',
     set_win_bounds: 'set_win_bounds',

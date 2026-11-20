@@ -92,6 +92,47 @@ const BLACK: Rgb = { r: 0, g: 0, b: 0 }
 const minContrast = (color: Rgb, backgrounds: Rgb[]) =>
   Math.min(...backgrounds.map((background) => getContrastRatio(color, background)))
 
+/** 桌面歌词保持透明底色，优先兼顾背景对比度与唱词色差。 */
+export const getDesktopLyricForeground = (
+  source: Rgb,
+  backgrounds: Rgb[],
+  opacity: number
+) => {
+  const samples = backgrounds.length ? backgrounds : [BLACK, WHITE]
+  const alpha = clamp01(opacity)
+  const contrast = (color: Rgb) =>
+    Math.min(
+      ...samples.map((background) => getContrastRatio(mix(background, color, alpha), background))
+    )
+  const unplay = contrast(WHITE) >= contrast(BLACK) ? WHITE : BLACK
+  const opposite = unplay === WHITE ? BLACK : WHITE
+  const choosePair = () => {
+    if (contrast(unplay) < 4.5) return null
+    for (let step = 0; step <= 20; step++) {
+      for (const target of [unplay, opposite]) {
+        const played = round(mix(source, target, step / 20))
+        if (contrast(played) < 4.5) continue
+        const separation = Math.min(
+          ...samples.map((background) =>
+            getContrastRatio(mix(background, played, alpha), mix(background, unplay, alpha))
+          )
+        )
+        if (separation >= 2) return { played }
+      }
+    }
+    return null
+  }
+  // shortcut: 混合背景或低透明度无法保证固定对比度，需要精确可读性时再按文字区域取色。
+  const played = choosePair()?.played ?? round(mix(unplay, opposite, 0.35))
+  const shadow = unplay === WHITE ? BLACK : WHITE
+  return {
+    played: toCss(played),
+    unplay: toCss(unplay),
+    shadow: toCss(shadow),
+    background: 'transparent',
+  }
+}
+
 // 取整到和实际渲染同一个值，免得算出来的对比度差一点点
 const round = ({ r, g, b }: Rgb): Rgb => ({ r: Math.round(r), g: Math.round(g), b: Math.round(b) })
 

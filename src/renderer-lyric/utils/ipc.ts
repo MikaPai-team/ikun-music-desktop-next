@@ -6,6 +6,11 @@ type RemoveListener = () => void
 export const getSetting = async () => {
   return rendererInvoke<LX.DesktopLyric.Config>(WIN_LYRIC_RENDERER_EVENT_NAME.get_config)
 }
+export const getBackgroundSample = async () => {
+  return rendererInvoke<LX.DesktopLyric.BackgroundSample | null>(
+    WIN_LYRIC_RENDERER_EVENT_NAME.get_background_sample
+  )
+}
 export const updateSetting = async (setting: Partial<LX.DesktopLyric.Config>) => {
   await rendererInvoke(WIN_LYRIC_RENDERER_EVENT_NAME.set_config, setting)
 }

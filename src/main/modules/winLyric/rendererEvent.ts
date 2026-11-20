@@ -3,7 +3,9 @@ import { mainOn, mainHandle } from '@common/mainIpc'
 import { WIN_LYRIC_RENDERER_EVENT_NAME } from '@common/ipcNames'
 import { buildLyricConfig, getLyricWindowBounds } from './utils'
 import { sendNewDesktopLyricClient } from '@main/modules/winMain'
-import { getBounds, getMainFrame, sendEvent, setBounds, setResizeable } from './main'
+import {
+  getBackgroundSample, getBounds, getMainFrame, sendEvent, setBounds, setResizeable,
+} from './main'
 import { MessageChannelMain } from 'electron'
 
 export default () => {
@@ -25,6 +27,11 @@ export default () => {
 
   mainHandle<LX.DesktopLyric.Config>(WIN_LYRIC_RENDERER_EVENT_NAME.get_config, async () => {
     return buildLyricConfig(global.lx.appSetting) as LX.DesktopLyric.Config
+  })
+
+  mainHandle(WIN_LYRIC_RENDERER_EVENT_NAME.get_background_sample, async ({ event }) => {
+    if (event.senderFrame !== getMainFrame()) return null
+    return getBackgroundSample()
   })
 
   mainOn<LX.DesktopLyric.NewBounds>(

@@ -7,7 +7,7 @@ let lrc: Lyric
 
 export const init = () => {
   lrc = new Lyric({
-    shadowContent: true,
+    shadowContent: false,
     activeLineClassName: 'active',
     rate: setting['player.playbackRate'],
     isVertical: setting['desktopLyric.direction'] == 'vertical',

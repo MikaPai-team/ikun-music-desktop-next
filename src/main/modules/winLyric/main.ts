@@ -1,5 +1,6 @@
 import path from 'node:path'
-import { BrowserWindow } from 'electron'
+import { release } from 'node:os'
+import { BrowserWindow, desktopCapturer, screen } from 'electron'
 import { debounce, getPlatform, isLinux, isWin } from '@common/utils'
 import { initWindowSize, minHeight, minWidth } from './utils'
 import { mainSend } from '@common/mainIpc'
@@ -127,6 +128,7 @@ export const createWindow = () => {
     useContentSize: true,
     frame: false,
     transparent: true,
+    backgroundColor: '#00000000',
     hasShadow: false,
     // enableRemoteModule: false,
     // icon: join(global.__static, isWin ? 'icons/256x256.ico' : 'icons/512x512.png'),
@@ -188,6 +190,74 @@ export const sendEvent = <T = any>(name: string, params?: T) => {
 export const getBounds = (): Electron.Rectangle => {
   if (!browserWindow) throw new Error('window is not available')
   return browserWindow.getBounds()
+}
+
+let backgroundCapture: Promise<LX.DesktopLyric.BackgroundSample | null> | null = null
+
+export const getBackgroundSample = (): Promise<LX.DesktopLyric.BackgroundSample | null> => {
+  const lyricWindow = browserWindow
+  // shortcut: 旧 Windows / 其他平台不能可靠排除歌词窗口，使用细描边；有原生排除捕获 API 后再接入。
+  if (!isWin || Number(release().split('.')[2]) < 19041 || !lyricWindow?.isVisible()) {
+    return Promise.resolve(null)
+  }
+  if (backgroundCapture) return backgroundCapture
+  backgroundCapture = (async () => {
+    const bounds = lyricWindow.getContentBounds()
+    const wasProtected = lyricWindow.isContentProtected()
+    try {
+      // 只在采样时排除本窗口，避免把歌词自身取成背景；不隐藏实际窗口。
+      lyricWindow.setContentProtection(true)
+      const sources = await desktopCapturer.getSources({
+        types: ['screen'],
+        thumbnailSize: { width: 960, height: 540 },
+        fetchWindowIcons: false,
+      })
+      if (lyricWindow.isDestroyed() || browserWindow !== lyricWindow) return null
+      const current = lyricWindow.getContentBounds()
+      if (
+        current.x !== bounds.x || current.y !== bounds.y ||
+        current.width !== bounds.width || current.height !== bounds.height
+      ) return null
+      const colors: LX.DesktopLyric.BackgroundSample['colors'] = []
+      const displays = screen.getAllDisplays()
+      for (const display of displays) {
+        const area = display.bounds
+        const left = Math.max(bounds.x, area.x)
+        const top = Math.max(bounds.y, area.y)
+        const right = Math.min(bounds.x + bounds.width, area.x + area.width)
+        const bottom = Math.min(bounds.y + bounds.height, area.y + area.height)
+        if (right <= left || bottom <= top) continue
+        const source = sources.find((source) => source.display_id === String(display.id)) ??
+          (displays.length === 1 && sources.length === 1 ? sources[0] : undefined)
+        if (!source || source.thumbnail.isEmpty()) continue
+        const size = source.thumbnail.getSize()
+        const x = Math.floor(((left - area.x) / area.width) * size.width)
+        const y = Math.floor(((top - area.y) / area.height) * size.height)
+        const width = Math.min(
+          size.width - x, Math.ceil(((right - left) / area.width) * size.width)
+        )
+        const height = Math.min(
+          size.height - y, Math.ceil(((bottom - top) / area.height) * size.height)
+        )
+        if (width <= 0 || height <= 0) continue
+        const pixels = source.thumbnail
+          .crop({ x, y, width, height })
+          .resize({ width: 16, height: 8, quality: 'good' })
+          .toBitmap({ scaleFactor: 1 })
+        // Windows NativeImage 的位图是 BGRA；只传颜色，截图不落盘、不发给 renderer。
+        for (let i = 0; i < pixels.length; i += 4) {
+          if (pixels[i + 3] < 128) continue
+          colors.push({ r: pixels[i + 2], g: pixels[i + 1], b: pixels[i] })
+        }
+      }
+      return colors.length ? { bounds, colors } : null
+    } finally {
+      if (!lyricWindow.isDestroyed()) lyricWindow.setContentProtection(wasProtected)
+    }
+  })().finally(() => {
+    backgroundCapture = null
+  })
+  return backgroundCapture
 }
 
 export const setBounds = (bounds: Electron.Rectangle) => {

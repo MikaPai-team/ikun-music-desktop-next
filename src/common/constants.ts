@@ -29,6 +29,7 @@ export const LIST_IDS = {
   TEMP: 'temp',
   DOWNLOAD: 'download',
   LOCAL: 'local',
+  LOCAL_VIEW: 'local__view',
   PLAY_LATER: null,
 } as const
 

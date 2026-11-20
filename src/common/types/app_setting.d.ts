@@ -543,6 +543,11 @@ declare global {
       'localMusic.directory': string
 
       /**
+       * 本地歌曲搜索与筛选状态（JSON 字符串）
+       */
+      'localMusic.filterState': string
+
+      /**
        * 是否启用下载功能
        */
       'download.enable': boolean

@@ -41,6 +41,11 @@ declare namespace LX {
 
     type WinMainActions = 'get_info' | 'get_status' | 'get_analyser_data_array'
 
+    interface BackgroundSample {
+      colors: Array<{ r: number; g: number; b: number }>
+      bounds: Electron.Rectangle
+    }
+
     interface LyricActionBase<A> {
       action: A
     }
@@ -63,7 +68,7 @@ declare namespace LX {
             tlrc: string | null
             rlrc: string | null
             lxlrc: string | null
-            // pic: string | null
+            pic: string | null
             isPlay: boolean
             line: number
             played_time: number
@@ -87,6 +92,7 @@ declare namespace LX {
           }
         >
       | LyricAction<'set_offset', number>
+      | LyricAction<'set_pic', { id: string | null; pic: string | null }>
       | LyricAction<'set_playbackRate', number>
       | LyricAction<'set_play', number>
       | LyricAction<'set_pause'>

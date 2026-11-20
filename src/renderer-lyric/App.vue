@@ -110,7 +110,6 @@ body {
   height: 100vh;
   box-sizing: border-box;
   color: #fff;
-  opacity: 0.8;
 }
 
 body {
@@ -127,11 +126,6 @@ body {
   height: 100%;
   transition: opacity 0.3s ease;
   opacity: 1;
-  &.lock {
-    #main {
-      background-color: transparent;
-    }
-  }
   &.hide {
     opacity: 0.05;
     &:hover {
@@ -218,11 +212,10 @@ body {
   position: relative;
   box-sizing: border-box;
   height: 100%;
-  transition: background-color @transition-theme;
   min-height: 0;
   border-radius: @radius-border;
   overflow: hidden;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: transparent;
 
   &:hover {
     .control-bar {
@@ -242,5 +235,16 @@ body {
   opacity: 0;
   transition: opacity @transition-theme;
   z-index: 1;
+}
+
+:root.desktop-artwork-color #container #main {
+  background-color: var(--desktop-lyric-background);
+
+  .line-mode .font-lrc,
+  .extended .font-lrc,
+  .font-mode > .line > .font-lrc > span {
+    text-shadow: none;
+    -webkit-text-stroke: 0.35px var(--color-lyric-shadow);
+  }
 }
 </style>
