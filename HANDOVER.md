@@ -2,6 +2,11 @@
 
 更新日期：2026-11-21
 
+## 编译过程补记（2026-11-21，3.11.0-fix.1）
+
+- 网络改进提交 1feda75 已按用户本轮例外要求直接推送 next/main。首次 main 编译报告两处 TS2345：catch 的 unknown 类型不能传入 electron-updater 的 Error 事件；已在事件边界归一为 Error，随本条修正提交。当前尚未生成新安装包，未运行测试。
+
+
 ## 本次更新网络改进（2026-11-21，3.11.0-fix.1）
 
 - 用户已确认 3.11.0 功能正常，alpha-test 已快进合入并推送 main（688036a）；3.11.0 草稿 Release 已正式发布并设为最新，ID 453509973，地址 https://github.com/MikaPai-team/ikun-music-desktop-next/releases/tag/v3.11.0 ，原有三份已核验附件保留。

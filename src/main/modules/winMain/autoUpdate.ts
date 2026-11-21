@@ -131,7 +131,7 @@ export default () => {
     try {
       await prepareUpdateSession()
     } catch (error) {
-      autoUpdater.emit('error', error)
+      autoUpdater.emit('error', error instanceof Error ? error : new Error(String(error)))
       return
     }
     void autoUpdater.downloadUpdate().catch(() => {})
@@ -167,7 +167,7 @@ const checkUpdate = async () => {
     try {
       await prepareUpdateSession()
     } catch (error) {
-      autoUpdater.emit('error', error)
+      autoUpdater.emit('error', error instanceof Error ? error : new Error(String(error)))
       return
     }
     autoUpdater.autoDownload = global.lx.appSetting['common.tryAutoUpdate']
