@@ -1,8 +1,14 @@
 <template>
   <div :class="$style.main">
     <div class="scroll" :class="$style.toc">
+      <h2 :class="$style.tocTitle">{{ $t('setting') }}</h2>
       <ul :class="$style.tocList" role="tablist">
-        <li v-for="group in tocGroups" :key="group.id" :class="$style.tocListItem" role="presentation">
+        <li
+          v-for="group in tocGroups"
+          :key="group.id"
+          :class="$style.tocListItem"
+          role="presentation"
+        >
           <button
             :class="[$style.tocItem, { [$style.active]: activeGroupId == group.id }]"
             role="tab"
@@ -21,6 +27,9 @@
       class="scroll"
       :class="[$style.setting, { [$style.singleSection]: activeGroup.components.length == 1 }]"
     >
+      <div :class="$style.header">
+        <h2>{{ activeGroup.title }}</h2>
+      </div>
       <dl>
         <component :is="name" v-for="name in activeGroup.components" :key="name" />
       </dl>
@@ -35,6 +44,7 @@ import { useRoute } from '@common/utils/vueRouter'
 
 import SettingBasic from './components/SettingBasic.vue'
 import SettingPlay from './components/SettingPlay.vue'
+import SettingLastfm from './components/SettingLastfm.vue'
 import SettingLyric from './components/SettingLyric.vue'
 import SettingDesktopLyric from './components/SettingDesktopLyric.vue'
 import SettingSource from './components/SettingSource.vue'
@@ -56,6 +66,7 @@ export default {
   components: {
     SettingBasic,
     SettingPlay,
+    SettingLastfm,
     SettingLyric,
     SettingDesktopLyric,
     SettingSource,
@@ -80,7 +91,7 @@ export default {
 
     const tocGroups = computed(() => [
       { id: 'basic', title: t('setting__group_basic'), components: ['SettingBasic'] },
-      { id: 'play', title: t('setting__group_play'), components: ['SettingPlay'] },
+      { id: 'play', title: t('setting__group_play'), components: ['SettingPlay', 'SettingLastfm'] },
       {
         id: 'lyric',
         title: t('setting__group_lyric'),
@@ -157,29 +168,43 @@ export default {
   display: flex;
   flex-flow: row nowrap;
   height: 100%;
-  border-top: var(--color-list-header-border-bottom);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .toc {
-  flex: 0 0 168px;
-  padding: 12px 6px 12px 12px;
+  flex: 0 0 180px;
+  padding: 16px 10px 12px 18px;
   overflow-y: auto;
   box-sizing: border-box;
+  border-right: 1px solid var(--color-divider);
+}
+.tocTitle {
+  .mixin-page-title();
+  margin-bottom: 14px;
+}
+.header {
+  .mixin-page-header();
+  padding-left: 0;
+  padding-right: 0;
+  h2 {
+    .mixin-page-title();
+  }
 }
 
 .tocList {
   display: flex;
   flex-flow: column nowrap;
-  gap: 2px;
+  gap: 4px;
 }
 
 .tocItem {
   position: relative;
   display: block;
   width: 100%;
-  padding: 9px 12px;
-  border: none;
-  border-radius: @radius-border;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
   background: none;
   font-size: 13px;
   font-family: inherit;
@@ -190,19 +215,9 @@ export default {
   transition: @transition-fast;
   transition-property: background-color, color;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 3px;
-    height: 16px;
-    margin-top: -8px;
-    border-radius: 0 3px 3px 0;
-    background-color: var(--color-primary);
-    transition: @transition-fast;
-    transition-property: opacity;
-    opacity: 0;
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
   }
 
   &:hover {
@@ -211,20 +226,17 @@ export default {
 
   &.active {
     background-color: var(--color-primary-alpha-900);
-    color: var(--color-primary-font);
+    border-color: var(--color-primary-alpha-600);
+    color: var(--color-font);
     font-weight: 600;
-
-    &::before {
-      opacity: 1;
-    }
   }
 }
 
 .setting {
   flex: auto;
-  width: 100%;
+  min-width: 0;
   height: 100%;
-  padding: 4px 18px 24px;
+  padding: 0 18px 24px;
   box-sizing: border-box;
   overflow-y: auto;
   font-size: 14px;
@@ -251,10 +263,9 @@ export default {
 
     h3 {
       margin: 0 0 12px;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
-      color: var(--color-text-secondary);
-      letter-spacing: 0.02em;
+      color: var(--color-font);
     }
 
     h3:not(:first-child) {
@@ -291,6 +302,24 @@ export default {
   // 分组内只有一个设置页时隐藏页面标题，避免与左侧导航重复
   &.singleSection :global(dt) {
     display: none;
+  }
+}
+@media (max-width: 700px) {
+  .toc {
+    flex-basis: 138px;
+    padding-left: 12px;
+    padding-right: 6px;
+  }
+  .tocItem {
+    padding: 10px 8px;
+  }
+  .setting {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .header {
+    padding-left: 0;
+    padding-right: 0;
   }
 }
 </style>

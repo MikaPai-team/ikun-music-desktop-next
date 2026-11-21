@@ -76,6 +76,8 @@ const handleSendEvent = (action: WaitEvent) => {
 }
 
 export default () => {
+  autoUpdater.setFeedURL({ provider: 'github', owner: 'MikaPai-team', repo: 'ikun-music-desktop-next' })
+  autoUpdater.allowPrerelease = false
   autoUpdater.on('checking-for-update', () => {
     sendStatusToWindow('Checking for update...')
   })

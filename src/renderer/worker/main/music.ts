@@ -1,4 +1,5 @@
 import { getLocalMusicFileLyric, getLocalMusicFilePic } from '@renderer/utils/music'
+export { getLocalMusicTags } from '@renderer/utils/music'
 import path from 'node:path'
 import os from 'node:os'
 import fs from 'node:fs/promises'

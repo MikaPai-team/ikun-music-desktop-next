@@ -1,30 +1,33 @@
 <template>
   <div :class="$style.leaderboard">
-    <div :class="$style.lists">
-      <div :class="$style.listsSelect">
-        <base-selection
-          :model-value="source"
-          :class="$style.select"
-          :list="sourceList"
-          item-key="id"
-          item-name="name"
-          @update:model-value="handleToggleSource"
-        />
-      </div>
-      <BoardList
-        ref="boardListRef"
-        :board-id="boardId"
-        :source="source"
-        @show-menu="$refs.musicListRef?.hideMenu()"
+    <div :class="$style.header">
+      <h2 :class="$style.title">{{ $t('leaderboard') }}</h2>
+      <base-selection
+        :model-value="source"
+        :class="$style.select"
+        :list="sourceList"
+        item-key="id"
+        item-name="name"
+        @update:model-value="handleToggleSource"
       />
     </div>
-    <div :class="$style.list">
-      <MusicList
-        ref="musicListRef"
-        :source="source"
-        :board-id="boardId"
-        @show-menu="$refs.boardListRef?.hideMenu()"
-      />
+    <div :class="$style.content">
+      <div :class="$style.lists">
+        <BoardList
+          ref="boardListRef"
+          :board-id="boardId"
+          :source="source"
+          @show-menu="$refs.musicListRef?.hideMenu()"
+        />
+      </div>
+      <div :class="$style.list">
+        <MusicList
+          ref="musicListRef"
+          :source="source"
+          :board-id="boardId"
+          @show-menu="$refs.boardListRef?.hideMenu()"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -101,102 +104,64 @@ export default {
 
 <style lang="less" module>
 @import '@renderer/assets/styles/layout.less';
-
 .leaderboard {
   height: 100%;
   display: flex;
+  flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 .header {
-  flex: none;
-  width: 100%;
-  display: flex;
-  flex-flow: row nowrap;
+  .mixin-page-header();
 }
-.tab {
-  flex: auto;
+.title {
+  .mixin-page-title();
+  flex: 1;
 }
 .select {
   flex: none;
-  width: 80px;
+  width: 120px;
+  font-size: 13px;
+  :global(.label-content) {
+    height: 38px;
+    border: 1px solid var(--color-control-stroke);
+    border-radius: var(--radius-control);
+    color: var(--color-font);
+    background: var(--color-control-fill);
+  }
+  :global(.selection-list) {
+    max-height: min(320px, 50vh);
+  }
 }
 .content {
   flex: auto;
+  min-height: 0;
   display: flex;
-  overflow: hidden;
-  flex-flow: column nowrap;
+  gap: 12px;
+  padding: 0 18px;
 }
-
 .lists {
-  flex: none;
-  width: 14.8%;
+  flex: 0 0 160px;
+  min-height: 0;
   display: flex;
-  flex-flow: column nowrap;
+  flex-direction: column;
+  border-right: 1px solid var(--color-divider);
+  padding-right: 10px;
 }
-.listsHeader {
-  position: relative;
-}
-
-.listsSelect {
-  font-size: 12px;
-
-  &:hover {
-    :global(.icon) {
-      opacity: 1;
-    }
-  }
-
-  > :global(.content) {
-    display: block;
-    width: 100%;
-  }
-  :global(.label-content) {
-    background-color: transparent !important;
-    line-height: 38px;
-    height: 38px;
-    border-radius: 0;
-    &:hover {
-      background: none !important;
-    }
-  }
-  :global(.label) {
-    color: var(--color-font) !important;
-  }
-  :global(.icon) {
-    opacity: 0.6;
-    transition: opacity 0.3s ease;
-  }
-
-  :global(.selection-list) {
-    max-height: 500px;
-    box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.2);
-    li {
-      // background-color: var(--color-main-background);
-      line-height: 38px;
-      font-size: 13px;
-      &:hover {
-        background-color: var(--color-button-background-hover);
-      }
-      &:active {
-        background-color: var(--color-button-background-active);
-      }
-    }
-  }
-  // line-height: 38px;
-  // padding: 0 10px;
-  border-bottom: var(--color-list-header-border-bottom);
-  flex: none;
-}
-
 .list {
   position: relative;
   overflow: hidden;
-  height: 100%;
+  min-width: 0;
   flex: auto;
-  display: flex;
-  flex-flow: column nowrap;
-  // .noItem {
-
-  // }
+}
+@media (max-width: 700px) {
+  .content {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .lists {
+    flex-basis: 120px;
+    padding-right: 6px;
+  }
 }
 </style>

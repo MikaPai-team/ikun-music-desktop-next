@@ -32,3 +32,36 @@
   position: absolute;
   content: '';
 }
+
+// 与本地页保持一致的页面间距、标题与空状态。
+.mixin-page-header() {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px 18px 14px;
+  @media (max-width: 700px) {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+.mixin-page-title() {
+  margin: 0;
+  color: var(--color-font);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.mixin-page-empty() {
+  box-sizing: border-box;
+  padding: 24px;
+  text-align: center;
+  p {
+    color: var(--color-font-label);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+}

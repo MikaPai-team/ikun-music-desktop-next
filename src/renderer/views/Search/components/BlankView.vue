@@ -138,14 +138,13 @@ const handleSearch = (text) => {
   // justify-content: center;
 }
 .noitemListContainer {
-  padding: 3% 15px 15px;
-  // margin-top: -20px;
-  min-height: 250px;
-  max-height: 94.7%;
+  padding: 8px 18px 18px;
+  min-height: 0;
+  overflow-y: auto;
 }
 .noitemList {
   + .noitemList {
-    margin-top: 15px;
+    margin-top: 24px;
   }
 }
 .noitemHotSearchList {
@@ -155,16 +154,18 @@ const handleSearch = (text) => {
   color: var(--color-font);
   padding: 5px 5px 8px;
   font-size: 14px;
+  font-weight: 600;
 }
 .noitemListItem {
   display: inline-block;
   margin: 3px 5px;
-  background-color: var(--color-button-background);
+  background-color: transparent;
+  border: 1px solid var(--color-control-stroke);
   padding: 7px 10px;
-  border-radius: @radius-progress-border;
+  border-radius: var(--radius-control);
   transition: background-color @transition-normal;
   cursor: pointer;
-  color: var(--color-button-font);
+  color: var(--color-font);
   .mixin-ellipsis-1();
   max-width: 150px;
   font-size: 13px;
@@ -182,7 +183,7 @@ const handleSearch = (text) => {
   cursor: pointer;
   transition: @transition-normal;
   transition-property: color, opacity;
-  opacity: 0.3;
+  opacity: 0.8;
   &:hover {
     color: var(--color-primary-font-hover);
     opacity: 0.8;
@@ -203,9 +204,16 @@ const handleSearch = (text) => {
   align-items: center;
   justify-content: center;
   p {
-    font-size: 24px;
+    font-size: 16px;
     color: var(--color-font-label);
     text-align: center;
+  }
+  .mixin-page-empty();
+}
+@media (max-width: 700px) {
+  .noitemListContainer {
+    padding-left: 12px;
+    padding-right: 12px;
   }
 }
 </style>

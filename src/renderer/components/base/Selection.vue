@@ -1,6 +1,17 @@
 <template>
   <div class="content" :class="[$style.select, show ? $style.active : '']">
-    <div ref="dom_btn" class="label-content" :class="$style.label" @click="handleShow">
+    <div
+      ref="dom_btn"
+      class="label-content"
+      :class="$style.label"
+      role="button"
+      tabindex="0"
+      :aria-expanded="show"
+      @click="handleShow"
+      @keydown.enter.prevent="handleShow"
+      @keydown.space.prevent="handleShow"
+      @keydown.esc.stop.prevent="handleHide()"
+    >
       <span class="label">{{ label }}</span>
       <div class="icon" :class="$style.icon">
         <svg
@@ -30,6 +41,28 @@
           (itemKey ? item[itemKey] : item) == modelValue ? $style.active : null,
         ]"
         :aria-label="itemName ? item[itemName] : item"
+        tabindex="0"
+        role="button"
+        @keydown.enter.stop.prevent="
+          () => {
+            handleClick(item)
+            handleHide()
+            $refs.dom_btn.focus()
+          }
+        "
+        @keydown.space.stop.prevent="
+          () => {
+            handleClick(item)
+            handleHide()
+            $refs.dom_btn.focus()
+          }
+        "
+        @keydown.esc.stop.prevent="
+          () => {
+            handleHide()
+            $refs.dom_btn.focus()
+          }
+        "
         @click="handleClick(item)"
       >
         {{ itemName ? item[itemName] : item }}
@@ -189,6 +222,10 @@ export default {
   &:hover {
     background-color: var(--color-button-background-hover);
   }
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
   &:active {
     background-color: var(--color-button-background-active);
   }
@@ -221,6 +258,10 @@ export default {
   background-color: transparent;
   box-sizing: border-box;
   .mixin-ellipsis-1();
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
 
   &:hover {
     background-color: var(--color-button-background-hover);

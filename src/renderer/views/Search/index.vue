@@ -1,5 +1,9 @@
 <template>
   <div :class="$style.container">
+    <div :class="$style.heading">
+      <h2>{{ $t('search') }}</h2>
+      <span v-if="searchText" :class="$style.query" :title="searchText">{{ searchText }}</span>
+    </div>
     <div :class="$style.header">
       <base-tab v-model="source" :list="sources" @change="handleSourceChange" />
       <base-tab v-model="searchType" :list="searchTypes" @change="handleTypeChange" />
@@ -123,22 +127,47 @@ export default {
 </script>
 
 <style lang="less" module>
+@import '@renderer/assets/styles/layout.less';
+
 .container {
   display: flex;
   flex-flow: column nowrap;
+  min-height: 0;
+  overflow: hidden;
 }
 
+.heading {
+  .mixin-page-header();
+  h2 {
+    .mixin-page-title();
+  }
+}
+.query {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-font-label);
+  font-size: 12px;
+  .mixin-ellipsis-1();
+}
 .header {
-  // padding: 5px 0;
   flex: none;
   display: flex;
-  flex-flow: row nowrap;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   justify-content: space-between;
+  padding: 0 18px 12px;
 }
 
 .main {
   position: relative;
   flex: auto;
-  // min-height: 0;
+  min-height: 0;
+}
+@media (max-width: 700px) {
+  .header {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
 }
 </style>

@@ -5,6 +5,7 @@ import {
   setVolumeFadeEnabled,
   setVolumeFadeDuration,
   setSwitchFadeDuration,
+  setCrossfadeEnabled,
 } from '@renderer/plugins/player'
 
 import { debounce } from '@common/utils'
@@ -23,6 +24,7 @@ export default () => {
   setVolumeFadeEnabled(appSetting['player.isVolumeFade'])
   setVolumeFadeDuration(appSetting['player.volumeFadeDuration'])
   setSwitchFadeDuration(appSetting['player.switchFadeDuration'])
+  setCrossfadeEnabled(appSetting['player.isCrossfade'])
 
   const handleToggleVolumeMute = (_isMute?: boolean) => {
     let muteStatus = _isMute ?? !isMute.value
@@ -71,6 +73,10 @@ export default () => {
     (muteStatus) => {
       setMute(muteStatus)
     }
+  )
+  watch(
+    () => appSetting['player.isCrossfade'],
+    setCrossfadeEnabled
   )
   watch(
     () => appSetting['player.isVolumeFade'],

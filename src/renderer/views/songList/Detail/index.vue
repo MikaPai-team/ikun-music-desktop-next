@@ -173,90 +173,58 @@ export default {
 
 <style lang="less" module>
 @import '@renderer/assets/styles/layout.less';
-
 .container {
-  // position: absolute;
-  // left: 0;
-  // top: 0;
-  // width: 100%;
-  // height: 100%;
   display: flex;
   flex-flow: column nowrap;
+  min-height: 0;
+  overflow: hidden;
 }
-
 .songListHeader {
-  flex: none;
-  display: flex;
-  flex-flow: row nowrap;
-  height: 80px;
+  .mixin-page-header();
+  gap: 14px;
 }
 .songListHeaderLeft {
   flex: none;
-  margin-left: 15px;
-  height: 100%;
-  aspect-ratio: 1 / 1;
-  position: relative;
+  width: 80px;
+  height: 80px;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: 10px;
   background-position: center;
   background-size: cover;
-  opacity: 0.9;
-  box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.2);
+  background-color: var(--color-control-fill);
 }
-.playNum {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 4px;
-  background-color: rgba(0, 0, 0, 0.4);
-  color: #fff;
-  font-size: 12px;
-  text-align: right;
-  .mixin-ellipsis-1();
-}
-
 .songListHeaderMiddle {
-  flex: auto;
-  padding: 2px 7px;
+  flex: 1 1 160px;
   min-width: 0;
   h3 {
+    .mixin-page-title();
     .mixin-ellipsis-1();
-    line-height: 1.2;
-    padding-bottom: 5px;
-    color: var(--color-font);
   }
   p {
     .mixin-ellipsis(3);
+    margin-top: 6px;
     font-size: 12px;
-    line-height: 1.2;
+    line-height: 1.6;
     color: var(--color-font-label);
   }
 }
 .songListHeaderRight {
-  flex: none;
   display: flex;
-  align-items: center;
-  padding-right: 15px;
-
-  .headerRightBtn {
-    border-radius: 0;
-    &:first-child {
-      border-top-left-radius: 4px;
-      border-bottom-left-radius: 4px;
-    }
-    &:last-child {
-      border-top-right-radius: 4px;
-      border-bottom-right-radius: 4px;
-    }
-  }
+  flex-wrap: wrap;
+  gap: 8px;
 }
-
+.headerRightBtn {
+  min-height: 38px;
+}
 .list {
   position: relative;
   width: 100%;
   min-height: 0;
   flex: auto;
-  height: 100%;
+}
+@media (max-width: 700px) {
+  .songListHeaderRight {
+    flex-basis: 100%;
+  }
 }
 </style>

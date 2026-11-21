@@ -528,6 +528,7 @@ export default {
 
 .list {
   overflow: hidden;
+  min-width: 0;
   height: 100%;
   flex: auto;
   display: flex;
@@ -590,8 +591,9 @@ export default {
   align-items: center;
 
   p {
-    font-size: 24px;
+    font-size: 16px;
     color: var(--color-font-label);
   }
+  .mixin-page-empty();
 }
 </style>

@@ -452,7 +452,7 @@ export default {
 
 .pagination {
   text-align: center;
-  padding: 15px 0;
+  padding: 14px 0;
   // left: 50%;
   // transform: translateX(-50%);
 }
@@ -469,8 +469,9 @@ export default {
   // background-color: var(--color-000);
 
   p {
-    font-size: 24px;
+    font-size: 16px;
     color: var(--color-font-label);
   }
+  .mixin-page-empty();
 }
 </style>

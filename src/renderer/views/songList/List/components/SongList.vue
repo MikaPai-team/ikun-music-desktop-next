@@ -11,10 +11,14 @@
           v-for="item in props.listInfo.list"
           :key="item.id"
           :class="$style.item"
+          tabindex="0"
+          role="link"
+          :aria-label="item.name"
+          @keydown.enter.prevent="toDetail(item)"
           @click="toDetail(item)"
         >
           <div :class="$style.image">
-            <img :class="$style.img" loading="lazy" decoding="async" :src="item.img" />
+            <img :class="$style.img" alt="" loading="lazy" decoding="async" :src="item.img" />
           </div>
           <div :class="$style.desc">
             <h4>{{ item.name }}</h4>
@@ -31,12 +35,6 @@
             </div>
           </div>
         </li>
-        <li
-          v-for="(i, index) in 6"
-          :key="index"
-          :class="$style.item"
-          style="margin-bottom: 0; height: 0"
-        />
       </ul>
       <div :class="$style.pagination">
         <material-pagination
@@ -111,128 +109,119 @@ defineExpose({
 .container {
   overflow: hidden;
   height: 100%;
+  min-height: 0;
+  flex: auto;
   display: flex;
   flex-flow: column nowrap;
   position: relative;
 }
-
 .listContent {
   position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-flow: column nowrap;
+  inset: 0;
   font-size: 14px;
   box-sizing: border-box;
-  padding: 15px 15px 0;
-
+  padding: 4px 18px 0;
   ul {
-    display: flex;
-    flex-flow: row wrap;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px 12px;
   }
 }
 .item {
-  max-width: 360px;
-  width: 32%;
-  box-sizing: border-box;
+  min-width: 0;
   display: flex;
-  // flex-flow: column nowrap;
-  // padding: 10px;
-  margin-bottom: 20px;
+  gap: 10px;
+  padding: 10px 0;
+  border-radius: var(--radius-control);
   cursor: pointer;
-  transition: opacity @transition-normal;
+  transition: background-color 0.1s ease;
   &:hover {
-    opacity: 0.7;
+    background: var(--color-primary-alpha-900);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 }
 .image {
-  flex: none;
-  width: 40%;
-  display: flex;
-  background-position: center;
-  background-size: cover;
-  border-radius: 4px;
-  overflow: hidden;
-  opacity: 0.9;
+  flex: 0 0 38%;
   aspect-ratio: 1 / 1;
-
-  box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.2);
+  align-self: flex-start;
+  display: flex;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--color-control-fill);
 }
 .img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
 .desc {
   flex: auto;
-  padding: 2px 15px 2px 7px;
-  overflow: hidden;
+  min-width: 0;
+  padding: 2px 4px 2px 0;
   h4 {
+    color: var(--color-font);
     font-size: 14px;
-    // height: 2.6em;
-    text-align: justify;
-    line-height: 1.3;
+    font-weight: 600;
+    line-height: 1.5;
     .mixin-ellipsis-2();
   }
 }
 .songlist_info {
   display: flex;
-  flex-flow: row nowrap;
-  gap: 15px;
+  flex-wrap: wrap;
+  gap: 4px 10px;
   margin-top: 8px;
   font-size: 12px;
-  .mixin-ellipsis-1();
-  text-align: justify;
-  line-height: 1.2;
-  // text-indent: 24px;
+  line-height: 1.5;
   color: var(--color-font-label);
   svg {
-    margin-right: 2px;
+    margin-right: 3px;
   }
 }
-.author {
+.author,
+.time {
   margin-top: 6px;
   font-size: 12px;
-  .mixin-ellipsis-1();
-  text-align: justify;
-  line-height: 1.3;
-  // text-indent: 24px;
+  line-height: 1.5;
   color: var(--color-font-label);
+  .mixin-ellipsis-1();
 }
 .time {
   margin-top: 3px;
-  font-size: 12px;
-  .mixin-ellipsis-1();
-  text-align: justify;
-  line-height: 1.3;
-  // text-indent: 24px;
-  color: var(--color-font-label);
 }
 .pagination {
   text-align: center;
-  padding: 15px 0;
-  // left: 50%;
-  // transform: translateX(-50%);
+  padding: 14px 0;
 }
 .noitem {
   position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
+  inset: 0;
   display: flex;
-  flex-flow: column nowrap;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  // background-color: var(--color-000);
-
-  p {
-    font-size: 24px;
-    color: var(--color-font-label);
+  .mixin-page-empty();
+}
+@media (max-width: 900px) {
+  .listContent ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .listContent {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+@media (max-width: 480px) {
+  .listContent ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .image {
+    flex-basis: 80px;
   }
 }
 </style>

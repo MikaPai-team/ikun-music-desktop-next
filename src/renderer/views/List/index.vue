@@ -67,5 +67,15 @@ export default {
   height: 100%;
   display: flex;
   position: relative;
+  box-sizing: border-box;
+  padding: 16px 18px 0;
+  gap: 12px;
+}
+@media (max-width: 700px) {
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+    gap: 8px;
+  }
 }
 </style>

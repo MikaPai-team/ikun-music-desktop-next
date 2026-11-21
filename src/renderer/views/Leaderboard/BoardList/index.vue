@@ -9,6 +9,11 @@
         { [$style.clicked]: rightClickItemIndex == index },
       ]"
       :aria-label="item.name"
+      tabindex="0"
+      role="button"
+      :aria-pressed="item.id == boardId"
+      @keydown.enter.prevent="handleToggleList(item.id)"
+      @keydown.space.prevent="handleToggleList(item.id)"
       @click="handleToggleList(item.id)"
       @contextmenu="handleRigthClick($event, index)"
     >
@@ -97,56 +102,47 @@ defineExpose({ hideMenu: handleMenuClick })
 
 <style lang="less" module>
 @import '@renderer/assets/styles/layout.less';
-
 .listsContent {
   flex: auto;
+  min-height: 0;
   min-width: 0;
-  overflow-y: scroll;
-  // overflow-y: scroll !important;
-  // border-right: 1px solid rgba(0, 0, 0, 0.12);
+  overflow-y: auto;
 }
 .listsItem {
   position: relative;
-  transition: 0.3s ease;
-  transition-property: color, background-color;
-  background-color: transparent;
-  &:hover:not(.active) {
-    background-color: var(--color-primary-background-hover);
-    cursor: pointer;
-  }
-  &.active {
-    // background-color:
-    color: var(--color-primary);
-  }
-  &.selected {
-    background-color: var(--color-primary-font-active);
-  }
-  &.clicked {
-    background-color: var(--color-primary-background-hover);
-  }
-  &.editing {
-    padding: 0 10px;
-    background-color: var(--color-primary-background-hover);
-    .listsLabel {
-      display: none;
-    }
-    .listsInput {
-      display: block;
-    }
-  }
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  color: var(--color-font);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+.listsItem:hover,
+.listsItem.clicked {
+  background: var(--color-primary-alpha-900);
+}
+.listsItem.active {
+  border-color: var(--color-primary-alpha-600);
+  color: var(--color-font);
+  background: var(--color-primary-alpha-900);
+  font-weight: 600;
+}
+.listsItem:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
 }
 .activeIcon {
   height: 0.9em;
   width: 0.9em;
-  margin-left: -0.45em;
   vertical-align: -0.05em;
+  color: var(--color-primary);
 }
 .listsLabel {
   display: block;
-  height: 100%;
-  padding: 0 10px;
+  padding: 10px 8px;
   font-size: 13px;
-  line-height: 36px;
+  line-height: 1.4;
   .mixin-ellipsis-1();
 }
 </style>

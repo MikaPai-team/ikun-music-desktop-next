@@ -1,4 +1,4 @@
-import { isEmpty, setPause, setPlay, setResource, setStop } from '@renderer/plugins/player'
+import { isEmpty, setPause, setPlay, setResource, setStop, prepareTrackSwitch, isResourcePreloaded, getCurrentTime, getDuration, getPlaybackRate } from '@renderer/plugins/player'
 import {
   isPlay,
   playedList,
@@ -30,6 +30,7 @@ import { addDislikeInfo } from '@renderer/core/dislikeList'
 // import { checkMusicFileAvailable } from '@renderer/utils/music'
 
 let gettingUrlId = ''
+let startedMusicId = ''
 const createGettingUrlId = (musicInfo: LX.Music.MusicInfo | LX.Download.ListItem) => {
   const tInfo =
     'progress' in musicInfo
@@ -216,6 +217,7 @@ export const loadLyric = () => {
 const handleRestorePlay = async (restorePlayInfo: LX.Player.SavedPlayInfo) => {
   const musicInfo = playMusicInfo.musicInfo
   if (!musicInfo) return
+  startedMusicId = musicInfo.id
 
   setImmediate(() => {
     if (musicInfo.id != playMusicInfo.musicInfo?.id) return
@@ -241,7 +243,7 @@ const handleRestorePlay = async (restorePlayInfo: LX.Player.SavedPlayInfo) => {
 }
 
 // 处理音乐播放
-const handlePlay = () => {
+const handlePlay = (preloadedSrc?: string, fadeTime?: number) => {
   window.lx.isPlayedStop &&= false
 
   resetRandomNextMusicInfo()
@@ -254,7 +256,8 @@ const handlePlay = () => {
 
   if (!musicInfo) return
 
-  setStop()
+  prepareTrackSwitch(startedMusicId !== musicInfo.id, fadeTime, preloadedSrc)
+  startedMusicId = musicInfo.id
   window.app_event.pause()
 
   clearDelayNextTimeout()
@@ -263,7 +266,11 @@ const handlePlay = () => {
   if (appSetting['player.togglePlayMethod'] == 'random' && !playMusicInfo.isTempPlay)
     addPlayedList({ ...(playMusicInfo as LX.Player.PlayMusicInfo) })
 
-  setMusicUrl(musicInfo)
+  if (preloadedSrc) {
+    cancelDelayRetry?.()
+    gettingUrlId = ''
+    setResource(preloadedSrc)
+  } else setMusicUrl(musicInfo)
 
   void getPicPath({ musicInfo, listId: playMusicInfo.listId })
     .then((url: string) => {
@@ -415,23 +422,38 @@ export const getNextPlayMusicInfo = async (): Promise<LX.Player.PlayMusicInfo | 
   return nextPlayMusicInfo
 }
 
-const handlePlayNext = (playMusicInfo: LX.Player.PlayMusicInfo) => {
+const handlePlayNext = (playMusicInfo: LX.Player.PlayMusicInfo, preloadedSrc?: string, fadeTime?: number) => {
   // pause()
   setPlayMusicInfo(playMusicInfo.listId, playMusicInfo.musicInfo, playMusicInfo.isTempPlay)
-  handlePlay()
+  handlePlay(preloadedSrc, fadeTime)
 }
 /**
  * 下一曲
  * @param isAutoToggle 是否自动切换
  * @returns
  */
-export const playNext = async (isAutoToggle = false): Promise<void> => {
+export const playNext = async (
+  isAutoToggle = false,
+  prepared?: { current: LX.Music.MusicInfo | LX.Download.ListItem; next: LX.Player.PlayMusicInfo; src: string }
+): Promise<void> => {
+  const canUsePrepared = () => !prepared || (
+    playMusicInfo.musicInfo === prepared.current && isPlay.value && !window.lx.isPlayedStop &&
+    appSetting['player.isCrossfade'] && appSetting['player.isVolumeFade'] &&
+    isResourcePreloaded(prepared.src) &&
+    (getDuration() - getCurrentTime()) * 1000 / getPlaybackRate() <= appSetting['player.volumeFadeDuration']
+  )
+  if (!canUsePrepared()) return
+  const commitNext = (next: LX.Player.PlayMusicInfo) => {
+    if (!canUsePrepared()) return
+    if (prepared && (next.musicInfo.id !== prepared.next.musicInfo.id || next.listId !== prepared.next.listId)) return
+    handlePlayNext(next, prepared?.src, prepared ? appSetting['player.volumeFadeDuration'] : undefined)
+  }
   console.log('skip next', isAutoToggle)
   if (tempPlayList.length) {
     // 如果稍后播放列表存在歌曲则直接播放改列表的歌曲
     const playMusicInfo = tempPlayList[0]
     removeTempPlayList(0)
-    handlePlayNext(playMusicInfo)
+    commitNext(playMusicInfo)
     console.log('play temp list')
     return
   }
@@ -478,13 +500,13 @@ export const playNext = async (isAutoToggle = false): Promise<void> => {
     }
 
     if (index < playedList.length) {
-      handlePlayNext(playedList[index])
+      commitNext(playedList[index])
       console.log('play played list')
       return
     }
   }
   if (randomNextMusicInfo.info) {
-    handlePlayNext(randomNextMusicInfo.info)
+    commitNext(randomNextMusicInfo.info)
     return
   }
   // const isCheckFile = findNum > 2 // 针对下载列表，如果超过两次都碰到无效歌曲，则过滤整个列表内的无效歌曲
@@ -537,7 +559,7 @@ export const playNext = async (isAutoToggle = false): Promise<void> => {
     return
   }
 
-  handlePlayNext({
+  commitNext({
     musicInfo: filteredList[nextIndex],
     listId: currentListId,
     isTempPlay: false,

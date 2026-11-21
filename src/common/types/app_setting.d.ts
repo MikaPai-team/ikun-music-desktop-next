@@ -5,6 +5,7 @@ declare global {
     type AddMusicLocationType = 'top' | 'bottom'
 
     interface AppSetting {
+      'lastfm.enabled': boolean
       version: string
 
       /**
@@ -126,6 +127,9 @@ declare global {
        * 播放/暂停时音量是否渐入渐出
        */
       'player.isVolumeFade': boolean
+
+      /** 歌曲之间是否交叠渐入渐出 */
+      'player.isCrossfade': boolean
 
       /**
        * 播放、暂停和自然结束时的音量渐变时长（毫秒）

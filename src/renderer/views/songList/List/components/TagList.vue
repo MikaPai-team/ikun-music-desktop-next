@@ -1,6 +1,20 @@
 <template>
-  <div :class="[$style.tagList, { [$style.active]: popupVisible }]">
-    <div ref="dom_btn" :class="$style.label" @click.stop="handleShow">
+  <div
+    :class="[$style.tagList, { [$style.active]: popupVisible }]"
+    @keydown.esc.stop.prevent="
+      () => {
+        handleHide()
+        dom_btn?.focus()
+      }
+    "
+  >
+    <button
+      ref="dom_btn"
+      type="button"
+      :class="$style.label"
+      :aria-expanded="popupVisible"
+      @click.stop="handleShow"
+    >
       <span>{{ tagName }}</span>
       <div :class="$style.icon">
         <svg
@@ -14,19 +28,28 @@
           <use xlink:href="#icon-down" />
         </svg>
       </div>
-    </div>
+    </button>
     <div :class="$style.popup" :style="popupStyle" :aria-hidden="!popupVisible" @click.stop>
       <div :class="$style.list" class="scroll">
-        <div :class="$style.tag" @click="handleToggleTag('')">{{ $t('default') }}</div>
+        <button
+          type="button"
+          :class="[$style.tag, { [$style.chosen]: !props.tagId }]"
+          :aria-pressed="!props.tagId"
+          @click="handleToggleTag('')"
+        >
+          {{ $t('default') }}
+        </button>
         <dl v-for="tagInfo in list" :key="tagInfo.name">
           <dt :class="$style.type">{{ tagInfo.name }}</dt>
-          <dd
-            v-for="tag in tagInfo.list"
-            :key="tag.id"
-            :class="$style.tag"
-            @click="handleToggleTag(tag.id)"
-          >
-            {{ tag.name }}
+          <dd v-for="tag in tagInfo.list" :key="tag.id">
+            <button
+              type="button"
+              :class="[$style.tag, { [$style.chosen]: tag.id == props.tagId }]"
+              :aria-pressed="tag.id == props.tagId"
+              @click="handleToggleTag(tag.id)"
+            >
+              {{ tag.name }}
+            </button>
           </dd>
         </dl>
       </div>
@@ -124,7 +147,7 @@ const setTagPopupWidth = () => {
   }, 50)
 }
 
-const dom_btn = (ref < HTMLElement) | (null > null)
+const dom_btn = ref(null)
 const popupVisible = ref(false)
 const handleShow = () => (popupVisible.value = !popupVisible.value)
 const handleHide = (evt) => {
@@ -148,119 +171,119 @@ onBeforeUnmount(() => {
 
 <style lang="less" module>
 @import '@renderer/assets/styles/layout.less';
-
 .tagList {
-  font-size: 12px;
+  font-size: 13px;
   position: relative;
-
-  &.active {
-    .label {
-      .icon {
-        svg {
-          transform: rotate(180deg);
-        }
-      }
-    }
-    .popup {
-      opacity: 1;
-      transform: scale(1);
-      pointer-events: initial;
-    }
-  }
 }
-
 .label {
-  padding: 8px 15px;
-  // background-color: var(--color-button-background);
-  transition: color @transition-normal;
-  // border-top: 2px solid @color-tab-border-bottom;
-  // border-left: 2px solid @color-tab-border-bottom;
-  box-sizing: border-box;
-  text-align: center;
-  // border-top-left-radius: 3px;
-  color: var(--color-font);
-  cursor: pointer;
-
   display: flex;
-
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-control-stroke);
+  border-radius: var(--radius-control);
+  color: var(--color-font);
+  background: var(--color-control-fill);
+  font: inherit;
+  cursor: pointer;
   span {
     flex: auto;
   }
-  .icon {
-    flex: none;
-    margin-left: 7px;
-    line-height: 0;
-    svg {
-      width: 0.8em;
-      transition: transform 0.2s ease;
-      transform: rotate(0);
-    }
-  }
-
   &:hover {
-    color: var(--color-primary-font-hover);
+    background: var(--color-control-fill-hover);
   }
-  &:active {
-    color: var(--color-primary-font-active);
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 }
-
+.icon {
+  flex: none;
+  margin-left: 7px;
+  line-height: 0;
+  svg {
+    width: 0.8em;
+    transition: transform 0.2s ease;
+  }
+}
+.active {
+  .label {
+    border-color: var(--color-primary);
+    background: var(--color-primary-alpha-900);
+  }
+  .icon svg {
+    transform: rotate(180deg);
+  }
+  .popup {
+    opacity: 1;
+    transform: scale(1);
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
 .popup {
   position: absolute;
-  top: 100%;
-  width: 645px;
-  left: 8px;
-  margin-top: 12px;
-  border-radius: 4px;
-  background-color: var(--color-card-background);
+  top: calc(100% + 8px);
+  left: 0;
+  max-width: calc(100vw - 100px);
+  box-sizing: border-box;
+  border: 1px solid var(--color-control-stroke);
+  border-radius: 10px;
+  background: var(--color-content-background);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.16);
   opacity: 0;
-  transform: scale(0.95, 0.8);
-  transform-origin: 0 0 0;
-  transition: 0.25s ease;
-  transition-property: transform, opacity;
-  max-height: 250px;
-  z-index: 10;
+  visibility: hidden;
+  transform: scale(0.98);
+  transform-origin: top left;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+  z-index: 15;
   pointer-events: none;
-  filter: drop-shadow(0px 0px 4px rgba(0, 0, 0, 0.15));
   display: flex;
-
-  &:before {
-    content: ' ';
-    position: absolute;
-    top: -6px;
-    left: 20px;
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-bottom: 8px solid var(--color-card-background);
-  }
 }
 .list {
-  padding: 10px;
+  flex: auto;
+  min-width: 0;
+  padding: 14px;
   box-sizing: border-box;
-  // box-shadow: 0 0 4px rgba(0, 0, 0, .2);
+  overflow-y: auto;
 }
-
 .type {
-  padding-top: 10px;
-  padding-bottom: 3px;
+  padding: 10px 4px 4px;
   color: var(--color-font-label);
+  font-size: 12px;
 }
-
 .tag {
   display: inline-block;
-  margin: 5px;
-  background-color: var(--color-button-background);
+  margin: 4px;
+  border: 1px solid var(--color-control-stroke);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-font);
+  font: inherit;
   padding: 8px 10px;
-  border-radius: @radius-progress-border;
-  transition: background-color @transition-normal;
   cursor: pointer;
   &:hover {
-    background-color: var(--color-button-background-hover);
+    background: var(--color-primary-alpha-900);
   }
-  &:active {
-    background-color: var(--color-button-background-active);
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+.chosen {
+  border-color: var(--color-primary);
+  background: var(--color-primary-alpha-900);
+}
+.list dd {
+  display: inline-block;
+}
+@media (prefers-reduced-motion: reduce) {
+  .popup,
+  .icon svg {
+    transition: none;
   }
 }
 </style>

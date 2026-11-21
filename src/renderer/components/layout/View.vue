@@ -14,6 +14,10 @@
 .view {
   position: relative;
   z-index: 1;
+  :global(button:focus-visible) {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
   > :global(.view-container) {
     position: absolute !important;
     left: 0;

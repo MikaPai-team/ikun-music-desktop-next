@@ -1,21 +1,24 @@
 <template>
   <div :class="$style.container">
     <div :class="$style.header">
-      <div :class="$style.left">
-        <tag-list :source="source" :tag-id="tagId" :sort-id="sortId" />
-        <sort-tab :source="source" :tag-id="tagId" :sort-id="sortId" />
+      <h2 :class="$style.title">{{ $t('song_list') }}</h2>
+      <div :class="$style.actions">
+        <base-btn :class="$style.btn" min @click="visibleOpenSongListModal = true">{{
+          $t('songlist__import_input_show_btn')
+        }}</base-btn>
+        <base-selection
+          :model-value="source"
+          :class="$style.select"
+          :list="sourceList"
+          item-key="id"
+          item-name="name"
+          @update:model-value="handleToggleSource"
+        />
       </div>
-      <base-btn :class="$style.btn" outline min @click="visibleOpenSongListModal = true">{{
-        $t('songlist__import_input_show_btn')
-      }}</base-btn>
-      <base-selection
-        :model-value="source"
-        :class="$style.select"
-        :list="sourceList"
-        item-key="id"
-        item-name="name"
-        @update:model-value="handleToggleSource"
-      />
+    </div>
+    <div :class="$style.filters">
+      <tag-list :source="source" :tag-id="tagId" :sort-id="sortId" />
+      <sort-tab :source="source" :tag-id="tagId" :sort-id="sortId" />
     </div>
     <list-view :source="source" :tag-id="tagId" :sort-id="sortId" :page="page" />
     <open-list-modal v-model="visibleOpenSongListModal" :source-list="sourceList" />
@@ -130,94 +133,54 @@ export default {
 
 <style lang="less" module>
 @import '@renderer/assets/styles/layout.less';
-
 .container {
   height: 100%;
   display: flex;
   flex-flow: column nowrap;
   position: relative;
+  min-height: 0;
 }
 .header {
+  .mixin-page-header();
+}
+.title {
+  .mixin-page-title();
+  flex: 1;
+}
+.actions,
+.filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.filters {
   flex: none;
-  width: 100%;
-  display: flex;
-  flex-flow: row nowrap;
-  // padding-right: 5px;
-  // box-sizing: border-box;
-  padding-bottom: 5px;
+  padding: 0 18px 12px;
 }
-.left {
-  flex: auto;
-  display: flex;
-  flex-flow: row nowrap;
-}
-
 .btn {
+  min-height: 38px;
   color: var(--color-font);
-  transition: color @transition-fast;
-  background: none !important;
-  &:hover {
-    color: var(--color-primary-font-hover);
+}
+.select {
+  flex: none;
+  width: 120px;
+  font-size: 13px;
+  :global(.label-content) {
+    height: 38px;
+    border: 1px solid var(--color-control-stroke);
+    border-radius: var(--radius-control);
+    color: var(--color-font);
+    background: var(--color-control-fill);
+  }
+  :global(.selection-list) {
+    max-height: min(320px, 50vh);
   }
 }
-
-.select {
-  font-size: 12px;
-  width: auto;
-  flex: none;
-  padding: 0 5px;
-
-  &:hover {
-    :global(.icon) {
-      opacity: 1;
-    }
-  }
-
-  :global {
-    .label-content {
-      background-color: transparent !important;
-      transition: color @transition-fast;
-      color: var(--color-font);
-      // line-height: 38px;
-      // height: 38px;
-      border-radius: 0;
-      &:hover {
-        // background: none !important;
-        color: var(--color-primary-font-hover);
-        .icon {
-          opacity: 1;
-          // color: var(--color-primary-font-hover);
-        }
-      }
-    }
-    // .label {
-    //   color: var(--color-font) !important;
-    // }
-    .icon {
-      svg {
-        width: 0.8em;
-      }
-      // opacity: .6;
-      // transition: color @transition-fast;
-      // color: var(--color-font-label);
-    }
-
-    .selection-list {
-      max-height: 500px;
-      box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.2);
-      li {
-        // background-color: var(--color-main-background);
-        text-align: center;
-        line-height: 38px;
-        font-size: 13px;
-        &:hover {
-          background-color: var(--color-button-background-hover);
-        }
-        &:active {
-          background-color: var(--color-button-background-active);
-        }
-      }
-    }
+@media (max-width: 700px) {
+  .filters {
+    padding-left: 12px;
+    padding-right: 12px;
   }
 }
 </style>

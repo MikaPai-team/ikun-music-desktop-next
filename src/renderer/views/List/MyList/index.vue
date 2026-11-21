@@ -346,16 +346,21 @@ export default {
 
 @lists-item-height: 36px;
 .lists {
-  flex: none;
-  width: 16%;
+  flex: 0 0 180px;
+  min-height: 0;
+  min-width: 0;
   display: flex;
   flex-flow: column nowrap;
+  border-right: 1px solid var(--color-divider);
+  padding-right: 10px;
 }
 .listHeader {
   position: relative;
   display: flex;
   flex-flow: row nowrap;
-  border-bottom: var(--color-list-header-border-bottom);
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
   &:hover {
     .listsAdd {
       opacity: 1;
@@ -364,9 +369,9 @@ export default {
 }
 .listsTitle {
   flex: auto;
-  font-size: 12px;
+  .mixin-page-title();
+  min-width: 0;
   line-height: 38px;
-  padding: 0 10px;
   .mixin-ellipsis-1();
 }
 .headerBtns {
@@ -376,14 +381,14 @@ export default {
 .listsAdd {
   // position: absolute;
   // right: 0;
-  margin-top: 6px;
+  margin-top: 0;
   background: none;
   height: 30px;
   border: none;
   outline: none;
   border-radius: @radius-border;
   cursor: pointer;
-  opacity: 0.1;
+  opacity: 0.8;
   transition: opacity @transition-normal;
   color: var(--color-button-font);
   svg {
@@ -394,6 +399,10 @@ export default {
   }
   &:hover {
     opacity: 0.6 !important;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 }
 .listsContent {
@@ -423,6 +432,8 @@ export default {
 }
 .listsItem {
   position: relative;
+  border-radius: var(--radius-control);
+  margin-bottom: 4px;
   transition: 0.3s ease;
   transition-property: color, background-color, opacity;
   background-color: transparent;
@@ -433,8 +444,10 @@ export default {
     }
   }
   &.active {
-    // background-color:
-    color: var(--color-primary);
+    background-color: var(--color-primary-alpha-900);
+    box-shadow: inset 0 0 0 1px var(--color-primary-alpha-600);
+    color: var(--color-font);
+    font-weight: 600;
   }
   &.selected {
     background-color: var(--color-primary-font-active);
@@ -493,7 +506,16 @@ export default {
   }
 }
 .newLeave {
-  margin-top: -@lists-item-height;
+  margin-top: -(@lists-item-height + 4px);
   z-index: -1;
+}
+@media (max-width: 700px) {
+  .lists {
+    flex-basis: 150px;
+    padding-right: 6px;
+  }
+  .listsTitle {
+    font-size: 15px;
+  }
 }
 </style>

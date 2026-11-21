@@ -2,8 +2,12 @@ interface HTMLAudioElementChrome extends HTMLAudioElement {
   setSinkId: (id: string) => Promise<void>
 }
 let audio: HTMLAudioElementChrome | null = null
+let standbyAudio: HTMLAudioElementChrome | null = null
+let outgoingAudio: HTMLAudioElementChrome | null = null
+let outgoingTimer: ReturnType<typeof setInterval> | null = null
+let cancelPreloadRequest: (() => void) | null = null
 let audioContext: AudioContext
-let mediaSource: MediaElementAudioSourceNode
+let mediaSources: MediaElementAudioSourceNode[] = []
 let analyser: AnalyserNode
 // https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext
 // https://benzleung.gitbooks.io/web-audio-api-mini-guide/content/chapter5-1.html
@@ -196,6 +200,7 @@ let targetVolume = 1
 let fadeTimer: ReturnType<typeof setInterval> | null = null
 let isFadeInPending = false
 let isVolumeFadeEnabled = true
+let isCrossfadeEnabled = true
 let fadeDuration = DEFAULT_FADE_DURATION
 let switchFadeDuration = DEFAULT_SWITCH_FADE_DURATION
 
@@ -221,9 +226,11 @@ const fadeVolume = (
 ) => {
   if (!audio) return
   clearFade()
-  const from = audio.volume
-  if (from == to || duration <= 0) {
-    audio.volume = to
+  const currentAudio = audio
+  const from = targetVolume > 0 ? currentAudio.volume / targetVolume : 0
+  const target = to === 0 ? 0 : 1
+  if (from == target || duration <= 0) {
+    currentAudio.volume = to
     onEnd?.()
     return
   }
@@ -231,7 +238,7 @@ const fadeVolume = (
   isNaturalFadeRunning = isNaturalFade
   const startTime = performance.now()
   fadeTimer = setInterval(() => {
-    if (!audio) {
+    if (audio !== currentAudio) {
       clearFade()
       return
     }
@@ -239,7 +246,7 @@ const fadeVolume = (
     const easedProgress = progress < 0.5
       ? 2 * progress * progress
       : 1 - ((-2 * progress + 2) ** 2) / 2
-    audio.volume = from + (to - from) * easedProgress
+    currentAudio.volume = Math.min(1, Math.max(0, (from + (target - from) * easedProgress) * targetVolume))
     if (progress < 1) return
     clearFade()
     onEnd?.()
@@ -269,7 +276,7 @@ const handleNaturalFade = () => {
     audio.duration <= 0
   ) return
 
-  const remaining = (audio.duration - audio.currentTime) * 1000
+  const remaining = (audio.duration - audio.currentTime) * 1000 / audio.playbackRate
   if (remaining > fadeDuration) {
     // Seeking away from the tail must cancel a pending natural fade.
     if (isNaturalFadeRunning || (audio.volume === 0 && targetVolume > 0)) {
@@ -279,7 +286,7 @@ const handleNaturalFade = () => {
     return
   }
   // A short track should finish its fade-in instead of being faded out again.
-  if (audio.duration * 1000 <= fadeDuration || isFadeInPending || fadeTimer != null) return
+  if (audio.duration * 1000 / audio.playbackRate <= fadeDuration || isFadeInPending || fadeTimer != null) return
   if (remaining <= 20 || isNaturalFadeRunning) return
   fadeVolume(0, undefined, Math.max(remaining, 20), false, true)
 }
@@ -309,26 +316,123 @@ const applyPendingSrc = () => {
 export const setVolumeFadeEnabled = (enabled: boolean) => {
   isVolumeFadeEnabled = enabled
   if (enabled) return
+  stopOutgoingAudio()
+  cancelPreload()
   clearFade()
   isFadeInPending = false
   if (audio && !audio.paused) audio.volume = targetVolume
   applyPendingSrc()
 }
 
+const stopOutgoingAudio = () => {
+  if (outgoingTimer != null) clearInterval(outgoingTimer)
+  outgoingTimer = null
+  const previous = outgoingAudio
+  outgoingAudio = null
+  if (!previous) return
+  previous.autoplay = false
+  previous.pause()
+  previous.removeAttribute('src')
+  previous.load()
+}
+
+export const cancelPreload = () => {
+  cancelPreloadRequest?.()
+  if (!standbyAudio || standbyAudio === outgoingAudio) return
+  standbyAudio.pause()
+  standbyAudio.removeAttribute('src')
+  standbyAudio.load()
+}
+
+export const setCrossfadeEnabled = (enabled: boolean) => {
+  isCrossfadeEnabled = enabled
+  if (enabled) return
+  stopOutgoingAudio()
+  cancelPreload()
+}
+
+export const isResourcePreloaded = (src: string) =>
+  !!standbyAudio && standbyAudio !== outgoingAudio && standbyAudio.getAttribute('src') === src && standbyAudio.readyState >= 3
+
+export const preloadResource = (src: string): Promise<boolean> => {
+  cancelPreloadRequest?.()
+  const nextAudio = standbyAudio
+  if (!nextAudio || nextAudio === outgoingAudio) return Promise.resolve(false)
+  return new Promise((resolve) => {
+    const finish = (ready: boolean) => {
+      nextAudio.removeEventListener('canplay', handleReady)
+      nextAudio.removeEventListener('error', handleError)
+      clearTimeout(timeout)
+      if (cancelPreloadRequest === cancel) cancelPreloadRequest = null
+      resolve(ready)
+    }
+    const handleReady = () => finish(true)
+    const handleError = () => finish(false)
+    const cancel = () => finish(false)
+    const timeout = setTimeout(cancel, 10000)
+    cancelPreloadRequest = cancel
+    nextAudio.autoplay = false
+    nextAudio.volume = 0
+    nextAudio.addEventListener('canplay', handleReady)
+    nextAudio.addEventListener('error', handleError)
+    nextAudio.src = src
+  })
+}
+
+export const prepareTrackSwitch = (differentTrack: boolean, duration = switchFadeDuration, preloadedSrc?: string) => {
+  stopOutgoingAudio()
+  if (!differentTrack || !isCrossfadeEnabled || !isVolumeFadeEnabled || !audio || audio.paused || !audio.src || !standbyAudio || duration <= 0) {
+    setStop()
+    return
+  }
+  cancelPreloadRequest?.()
+  clearFade()
+  const previous = audio
+  if (!preloadedSrc || !isResourcePreloaded(preloadedSrc)) {
+    standbyAudio.pause()
+    standbyAudio.removeAttribute('src')
+    standbyAudio.load()
+  }
+  audio = standbyAudio
+  standbyAudio = previous
+  audio.autoplay = false
+  audio.volume = 0
+  audio.muted = previous.muted
+  audio.defaultPlaybackRate = previous.defaultPlaybackRate
+  audio.playbackRate = previous.playbackRate
+  audio.preservesPitch = previous.preservesPitch
+  isFadeInPending = true
+  pendingSrc = null
+  outgoingAudio = previous
+  const from = targetVolume > 0 ? previous.volume / targetVolume : 0
+  const remaining = (previous.duration - previous.currentTime) * 1000 / previous.playbackRate
+  const fadeTime = Number.isFinite(remaining) && remaining > 0 ? Math.min(duration, remaining) : duration
+  const start = performance.now()
+  outgoingTimer = setInterval(() => {
+    const progress = Math.min((performance.now() - start) / fadeTime, 1)
+    const eased = progress < 0.5 ? 2 * progress * progress : 1 - ((-2 * progress + 2) ** 2) / 2
+    previous.volume = Math.min(1, Math.max(0, from * (1 - eased) * targetVolume))
+    if (progress >= 1) stopOutgoingAudio()
+  }, FADE_INTERVAL)
+}
+
 export const createAudio = () => {
   if (audio) return
   audio = new window.Audio() as HTMLAudioElementChrome
-  audio.controls = false
-  audio.autoplay = true
-  audio.preload = 'auto'
-  audio.crossOrigin = 'anonymous'
-  audio.addEventListener('timeupdate', handleNaturalFade)
-  audio.addEventListener('playing', () => {
+  standbyAudio = new window.Audio() as HTMLAudioElementChrome
+  for (const element of [audio, standbyAudio]) {
+    element.controls = false
+    element.autoplay = element === audio
+    element.preload = 'auto'
+    element.crossOrigin = 'anonymous'
+  }
+  onTimeupdate(handleNaturalFade)
+  onPlaying(() => {
     if (!isFadeInPending) return
     const currentAudio = audio
     if (!currentAudio) return
     const duration = Number.isFinite(currentAudio.duration) && currentAudio.duration > 0
-      ? Math.min(fadeDuration, currentAudio.duration * 1000)
+      ? Math.min(fadeDuration, currentAudio.duration * 1000 / currentAudio.playbackRate)
       : fadeDuration
     fadeVolume(targetVolume, () => {
       isFadeInPending = false
@@ -485,8 +589,11 @@ const initAdvancedAudioFeatures = () => {
   initGain()
   initCompressor()
   // source -> analyser -> biquadFilter -> pitchShifter -> [(convolver & convolverSource)->convolverDynamicsCompressor] -> compressor -> panner -> gain
-  mediaSource = audioContext.createMediaElementSource(audio)
-  mediaSource.connect(analyser)
+  mediaSources = [audio, standbyAudio!].map((element) => {
+    const source = audioContext.createMediaElementSource(element)
+    source.connect(analyser)
+    return source
+  })
   analyser.connect(biquads.get(`hz${freqs[0]}`)!)
   const lastBiquadFilter = biquads.get(`hz${freqs.at(-1)!}`)!
   lastBiquadFilter.connect(convolverSourceGainNode)
@@ -508,8 +615,10 @@ const initAdvancedAudioFeatures = () => {
 }
 
 const handleMediaListChange = () => {
-  mediaSource.disconnect()
-  mediaSource.connect(analyser)
+  for (const source of mediaSources) {
+    source.disconnect()
+    source.connect(analyser)
+  }
 }
 
 // let isConnected = true
@@ -667,6 +776,7 @@ const connectNode = () => {
   }
 }
 const disconnectNode = () => {
+  if ([audio, standbyAudio].some((element) => element?.src && !element.paused)) return
   if (!isConnected) return
   console.log('disconnect Node')
   analyser?.disconnect()
@@ -677,10 +787,12 @@ const disconnectNode = () => {
 }
 const connectPitchShifterNode = () => {
   console.log('connect Pitch Shifter Node')
-  audio!.addEventListener('playing', connectNode)
-  audio!.addEventListener('pause', disconnectNode)
-  audio!.addEventListener('waiting', disconnectNode)
-  audio!.addEventListener('emptied', disconnectNode)
+  for (const element of [audio!, standbyAudio!]) {
+    element.addEventListener('playing', connectNode)
+    element.addEventListener('pause', disconnectNode)
+    element.addEventListener('waiting', disconnectNode)
+    element.addEventListener('emptied', disconnectNode)
+  }
   if (audio!.paused) disconnectNode()
 
   const lastBiquadFilter = biquads.get(`hz${freqs.at(-1)!}`)!
@@ -704,10 +816,12 @@ const disconnectPitchShifterNode = () => {
   pitchShifterNodeLoadStatus = 'unconnect'
   pitchShifterNodePitchFactor = null
 
-  audio!.removeEventListener('playing', connectNode)
-  audio!.removeEventListener('pause', disconnectNode)
-  audio!.removeEventListener('waiting', disconnectNode)
-  audio!.removeEventListener('emptied', disconnectNode)
+  for (const element of [audio!, standbyAudio!]) {
+    element.removeEventListener('playing', connectNode)
+    element.removeEventListener('pause', disconnectNode)
+    element.removeEventListener('waiting', disconnectNode)
+    element.removeEventListener('emptied', disconnectNode)
+  }
   connectNode()
 }
 const loadPitchShifterNode = () => {
@@ -763,6 +877,13 @@ export const hasInitedAdvancedAudioFeatures = (): boolean => audioContext != nul
 export const setResource = (src: string) => {
   if (!audio) return
   resetCompressorAgc()
+  if (audio.getAttribute('src') === src && audio.readyState >= 3) {
+    audio.dispatchEvent(new Event('loadeddata'))
+    audio.dispatchEvent(new Event('canplay'))
+    setPlay()
+    return
+  }
+  audio.autoplay = true
   pendingSrc = src
   // 切歌时 setStop 已经起了一段渐出：复用它，别再起第二段，否则旧曲会被渐出两遍。
   // finishSwitchFade 会在那段渐出结束时接上这里存的 pendingSrc。
@@ -802,6 +923,8 @@ export const setPlay = () => {
 
 export const setPause = () => {
   if (!audio) return
+  stopOutgoingAudio()
+  cancelPreload()
   applyPendingSrc()
   if (audio.paused) return
   if (!isVolumeFadeEnabled) {
@@ -832,6 +955,8 @@ const finishSwitchFade = () => {
 }
 
 export const setStop = () => {
+  stopOutgoingAudio()
+  cancelPreload()
   if (!audio) return
   if (isNaturalFadeRunning) {
     stopAudio()
@@ -858,13 +983,16 @@ export const getPlaybackRate = (): number => {
 
 export const setPlaybackRate = (rate: number) => {
   if (!audio) return
-  audio.defaultPlaybackRate = rate
-  audio.playbackRate = rate
+  for (const element of [audio, standbyAudio!]) {
+    element.defaultPlaybackRate = rate
+    element.playbackRate = rate
+  }
 }
 
 export const setPreservesPitch = (preservesPitch: boolean) => {
-  if (!audio) return
-  audio.preservesPitch = preservesPitch
+  for (const element of [audio, standbyAudio]) {
+    if (element) element.preservesPitch = preservesPitch
+  }
 }
 
 export const getMute = (): boolean => {
@@ -872,7 +1000,9 @@ export const getMute = (): boolean => {
 }
 
 export const setMute = (isMute: boolean) => {
-  if (audio) audio.muted = isMute
+  for (const element of [audio, standbyAudio]) {
+    if (element) element.muted = isMute
+  }
 }
 
 export const getCurrentTime = () => {
@@ -880,12 +1010,18 @@ export const getCurrentTime = () => {
 }
 
 export const setCurrentTime = (time: number) => {
+  stopOutgoingAudio()
+  cancelPreload()
+  if (isNaturalFadeRunning) {
+    clearFade()
+    if (audio) audio.volume = targetVolume
+  }
   if (audio) audio.currentTime = time
 }
 
-export const setMediaDeviceId = async (mediaDeviceId: string): Promise<void> => {
+export const setMediaDeviceId = async (id: string): Promise<void> => {
   if (!audio) return
-  return audio.setSinkId(mediaDeviceId)
+  await Promise.all([audio, standbyAudio!].map(async (element) => element.setSinkId(id)))
 }
 
 export const setVolume = (volume: number) => {
@@ -905,96 +1041,31 @@ export const getDuration = () => {
 
 type Noop = () => void
 
-export const onPlaying = (callback: Noop) => {
-  if (!audio) throw new Error('audio not defined')
-
-  audio.addEventListener('playing', callback)
+const onAudioEvent = (event: string, callback: Noop) => {
+  if (!audio || !standbyAudio) throw new Error('audio not defined')
+  const listeners = [audio, standbyAudio].map((element) => {
+    const listener = () => {
+      if (element === audio) callback()
+    }
+    element.addEventListener(event, listener)
+    return () => element.removeEventListener(event, listener)
+  })
   return () => {
-    audio?.removeEventListener('playing', callback)
+    for (const remove of listeners) remove()
   }
 }
 
-export const onPause = (callback: Noop) => {
-  if (!audio) throw new Error('audio not defined')
-
-  audio?.addEventListener('pause', callback)
-  return () => {
-    audio?.removeEventListener('pause', callback)
-  }
-}
-
-export const onEnded = (callback: Noop) => {
-  if (!audio) throw new Error('audio not defined')
-
-  audio.addEventListener('ended', callback)
-  return () => {
-    audio?.removeEventListener('ended', callback)
-  }
-}
-
-export const onError = (callback: Noop) => {
-  if (!audio) throw new Error('audio not defined')
-
-  audio.addEventListener('error', callback)
-  return () => {
-    audio?.removeEventListener('error', callback)
-  }
-}
-
-export const onLoadeddata = (callback: Noop) => {
-  if (!audio) throw new Error('audio not defined')
-
-  audio.addEventListener('loadeddata', callback)
-  return () => {
-    audio?.removeEventListener('loadeddata', callback)
-  }
-}
-
-export const onLoadstart = (callback: Noop) => {
-  if (!audio) throw new Error('audio not defined')
-
-  audio.addEventListener('loadstart', callback)
-  return () => {
-    audio?.removeEventListener('loadstart', callback)
-  }
-}
-
-export const onCanplay = (callback: Noop) => {
-  if (!audio) throw new Error('audio not defined')
-
-  audio.addEventListener('canplay', callback)
-  return () => {
-    audio?.removeEventListener('canplay', callback)
-  }
-}
-
-export const onEmptied = (callback: Noop) => {
-  if (!audio) throw new Error('audio not defined')
-
-  audio.addEventListener('emptied', callback)
-  return () => {
-    audio?.removeEventListener('emptied', callback)
-  }
-}
-
-export const onTimeupdate = (callback: Noop) => {
-  if (!audio) throw new Error('audio not defined')
-
-  audio.addEventListener('timeupdate', callback)
-  return () => {
-    audio?.removeEventListener('timeupdate', callback)
-  }
-}
-
-// 缓冲中
-export const onWaiting = (callback: Noop) => {
-  if (!audio) throw new Error('audio not defined')
-
-  audio.addEventListener('waiting', callback)
-  return () => {
-    audio?.removeEventListener('waiting', callback)
-  }
-}
+export const onPlaying = (callback: Noop) => onAudioEvent('playing', callback)
+export const onPause = (callback: Noop) => onAudioEvent('pause', callback)
+export const onEnded = (callback: Noop) => onAudioEvent('ended', callback)
+export const onError = (callback: Noop) => onAudioEvent('error', callback)
+export const onLoadeddata = (callback: Noop) => onAudioEvent('loadeddata', callback)
+export const onLoadstart = (callback: Noop) => onAudioEvent('loadstart', callback)
+export const onCanplay = (callback: Noop) => onAudioEvent('canplay', callback)
+export const onEmptied = (callback: Noop) => onAudioEvent('emptied', callback)
+export const onTimeupdate = (callback: Noop) => onAudioEvent('timeupdate', callback)
+export const onSeeking = (callback: Noop) => onAudioEvent('seeking', callback)
+export const onWaiting = (callback: Noop) => onAudioEvent('waiting', callback)
 
 // 可见性改变
 export const onVisibilityChange = (callback: Noop) => {

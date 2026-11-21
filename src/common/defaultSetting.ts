@@ -24,6 +24,7 @@ const defaultSetting: LX.AppSetting = {
   'common.showChangeLog': true,
 
   'player.startupAutoPlay': false,
+  'lastfm.enabled': false,
   'player.togglePlayMethod': 'listLoop',
   'player.playQuality': '128k',
   'player.isShowTaskProgess': true,
@@ -32,6 +33,7 @@ const defaultSetting: LX.AppSetting = {
   'player.powerSaveBlocker': true,
   'player.isMute': false,
   'player.isVolumeFade': true,
+  'player.isCrossfade': true,
   'player.volumeFadeDuration': 800,
   'player.switchFadeDuration': 1200,
   'player.compressor': 0,

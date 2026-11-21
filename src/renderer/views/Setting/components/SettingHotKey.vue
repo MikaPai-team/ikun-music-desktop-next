@@ -248,14 +248,15 @@ export default {
 .hotKeyContainer {
   display: flex;
   flex-flow: row wrap;
+  gap: 16px;
   // margin-top: -15px;
   margin-bottom: 15px;
   transition: opacity @transition-normal;
 }
 .hotKeyItem {
-  width: 30%;
-  padding-right: 35px;
-  margin-top: 15px;
+  flex: 1 1 180px;
+  min-width: 0;
+  margin-top: 0;
   box-sizing: border-box;
 }
 .hotKeyItemTitle {

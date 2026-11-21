@@ -1,6 +1,6 @@
 {
   "name": "ikun-music-desktop",
-  "version": "3.10.0-fix.2",
+  "version": "3.11.0",
   "description": "一个免费的音乐查找助手",
   "main": "./dist/main.js",
   "scripts": {
@@ -91,7 +91,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xingnengmao666/ikun-music-desktop-next.git"
+    "url": "git+https://github.com/MikaPai-team/ikun-music-desktop-next.git"
   },
   "keywords": [
     "music-player",

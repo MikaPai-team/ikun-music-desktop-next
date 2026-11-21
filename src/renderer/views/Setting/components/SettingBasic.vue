@@ -18,8 +18,11 @@ dd
   div
     base-checkbox.gap-left(
       v-for="theme in themeModes" :id="`setting_basic_theme_${theme.id}`" :key="theme.id"
-      name="setting_basic_theme" need :model-value="themeId" :value="theme.id" :label="theme.label"
+      name="setting_basic_theme" need :model-value="themeId" :value="theme.id" :aria-label="theme.label"
       @update:model-value="toggleTheme($event)")
+      span.theme-mode-label
+        span.theme-mode-swatch(:class="`theme-mode-swatch--${theme.id}`" aria-hidden="true")
+        span {{ theme.label }}
     svg-icon(class="help-icon" name="help-circle-outline" :aria-label="$t('theme_auto_tip')")
 
 dd
@@ -191,3 +194,24 @@ export default {
   },
 }
 </script>
+
+<style lang="less" scoped>
+.theme-mode-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 4px 8px;
+  cursor: pointer;
+}
+.theme-mode-swatch {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border: 1px solid #888;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px #0002;
+  &--fluent_light { background: #fff; }
+  &--fluent_dark { background: #161616; }
+  &--auto { background: repeating-linear-gradient(135deg, #fff 0 8px, #161616 8px 16px); }
+}
+</style>

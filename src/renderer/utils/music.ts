@@ -144,6 +144,21 @@ const getFileMetadata = async (path: string) => {
       : null
   }))
 }
+export const getLocalMusicTags = async (path: string) => {
+  const metadata = await getFileMetadata(path)
+  return {
+    track: metadata?.common.title?.trim() ?? '',
+    artist:
+      metadata?.common.artists
+        ?.map((artist) => artist.trim())
+        .filter(Boolean)
+        .join('、') ||
+      metadata?.common.artist?.trim() ||
+      '',
+    album: metadata?.common.album?.trim() ?? '',
+  }
+}
+
 /**
  * 获取歌曲文件封面图片
  * @param path 路径

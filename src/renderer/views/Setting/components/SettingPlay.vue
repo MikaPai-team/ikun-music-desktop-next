@@ -7,6 +7,9 @@ dd
     base-checkbox(id="setting_player_volume_fade" :model-value="appSetting['player.isVolumeFade']" :label="$t('setting__play_volume_fade')" @update:model-value="updateSetting({ 'player.isVolumeFade': $event })")
     svg-icon(class="help-icon" name="help-circle-outline" :aria-label="$t('setting__play_volume_fade_tip')")
   .fade-settings(v-if="appSetting['player.isVolumeFade']")
+    div
+      base-checkbox(id="setting_player_crossfade" :model-value="appSetting['player.isCrossfade']" :label="$t('setting__play_crossfade')" @update:model-value="updateSetting({ 'player.isCrossfade': $event })")
+      svg-icon(class="help-icon" name="help-circle-outline" :aria-label="$t('setting__play_crossfade_tip')")
     .fade-setting
       .fade-setting__header
         span {{ $t('setting__play_volume_fade_duration') }}

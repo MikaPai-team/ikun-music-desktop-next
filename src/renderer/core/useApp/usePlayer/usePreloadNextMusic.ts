@@ -1,118 +1,103 @@
 import { onBeforeUnmount, watch } from '@common/utils/vueTools'
-import { onTimeupdate, getCurrentTime } from '@renderer/plugins/player'
-import { playProgress } from '@renderer/store/player/playProgress'
-import { musicInfo } from '@renderer/store/player/state'
-// import { getList } from '@renderer/store/utils'
-import { getNextPlayMusicInfo, resetRandomNextMusicInfo } from '@renderer/core/player'
+import {
+  onTimeupdate, getCurrentTime, getDuration, getPlaybackRate,
+  preloadResource, isResourcePreloaded, cancelPreload,
+} from '@renderer/plugins/player'
+import { isPlay, playMusicInfo } from '@renderer/store/player/state'
+import { getNextPlayMusicInfo, resetRandomNextMusicInfo, playNext } from '@renderer/core/player'
 import { getMusicUrl } from '@renderer/core/music'
 import { appSetting } from '@renderer/store/setting'
 
-let audio: HTMLAudioElement
-const initAudio = () => {
-  if (audio) return
-  audio = new Audio()
-  audio.controls = false
-  audio.preload = 'auto'
-  audio.crossOrigin = 'anonymous'
-  audio.muted = true
-  audio.volume = 0
-  audio.autoplay = true
-  audio.addEventListener('playing', () => {
-    audio.pause()
-  })
-}
-const checkMusicUrl = async (url: string): Promise<boolean> => {
-  initAudio()
-  return new Promise((resolve) => {
-    const clear = () => {
-      audio.removeEventListener('error', handleErr)
-      audio.removeEventListener('canplay', handlePlay)
-    }
-    const handleErr = () => {
-      clear()
-      if (audio?.error?.code !== 1) {
-        resolve(false)
-      } else {
-        resolve(true)
-      }
-    }
-    const handlePlay = () => {
-      clear()
-      resolve(true)
-    }
-    audio.addEventListener('error', handleErr)
-    audio.addEventListener('canplay', handlePlay)
-    audio.src = url
-  })
-}
-
-const preloadMusicInfo = {
-  isLoading: false,
-  preProgress: 0,
-  info: null as LX.Player.PlayMusicInfo | null,
-}
-const resetPreloadInfo = () => {
-  preloadMusicInfo.preProgress = 0
-  preloadMusicInfo.info = null
-  preloadMusicInfo.isLoading = false
-}
-const preloadNextMusicUrl = async (curTime: number) => {
-  if (preloadMusicInfo.isLoading || curTime - preloadMusicInfo.preProgress < 3) return
-  preloadMusicInfo.isLoading = true
-  console.log('preload next music url')
-  const info = await getNextPlayMusicInfo()
-  if (info) {
-    preloadMusicInfo.info = info
-    const url = await getMusicUrl({ musicInfo: info.musicInfo }).catch(() => '')
-    if (url) {
-      console.log('preload url', url)
-      const result = await checkMusicUrl(url)
-      if (!result) {
-        const url = await getMusicUrl({ musicInfo: info.musicInfo, isRefresh: true }).catch(
-          () => ''
-        )
-        void checkMusicUrl(url)
-        console.log('preload url refresh', url)
-      }
-    }
-  }
-  preloadMusicInfo.isLoading = false
-}
-
 export default () => {
-  const setProgress = (time: number) => {
-    if (!musicInfo.id) return
-    preloadMusicInfo.preProgress = time
+  let revision = 0
+  let loading = false
+  let lastAttempt = -Infinity
+  let nextInfo: LX.Player.PlayMusicInfo | null = null
+  let nextSrc = ''
+  let switching = false
+  const reset = () => {
+    revision++
+    loading = false
+    lastAttempt = -Infinity
+    nextInfo = null
+    nextSrc = ''
+    switching = false
   }
-
-  const handleSetPlayInfo = () => {
-    resetPreloadInfo()
+  const invalidate = () => {
+    reset()
+    cancelPreload()
   }
-
+  const preload = async (time: number) => {
+    const attempt = revision
+    loading = true
+    lastAttempt = time
+    try {
+      const info = await getNextPlayMusicInfo()
+      if (!info || attempt !== revision) return
+      let src = await getMusicUrl({ musicInfo: info.musicInfo })
+      if (!src || attempt !== revision) return
+      if (!(await preloadResource(src))) {
+        if (attempt !== revision) return
+        src = await getMusicUrl({ musicInfo: info.musicInfo, isRefresh: true })
+        if (!src || attempt !== revision || !(await preloadResource(src))) return
+      }
+      if (attempt !== revision) return
+      nextInfo = info
+      nextSrc = src
+    } catch {
+      // Preloading is optional; normal playback retains URL refresh and error handling.
+    } finally {
+      if (attempt === revision) loading = false
+    }
+  }
+  const crossfade = async () => {
+    const attempt = revision
+    const current = playMusicInfo.musicInfo
+    const info = nextInfo
+    const src = nextSrc
+    if (!current || !info || current.id === info.musicInfo.id) return
+    switching = true
+    try {
+      const candidate = await getNextPlayMusicInfo()
+      if (attempt !== revision || !candidate) return
+      if (candidate.musicInfo.id !== info.musicInfo.id || candidate.listId !== info.listId) {
+        invalidate()
+        return
+      }
+      await playNext(true, { current, next: candidate, src })
+    } catch {
+      // A failed early transition falls back to the normal ended event.
+    } finally {
+      if (attempt === revision) switching = false
+    }
+  }
   watch(
-    () => appSetting['player.togglePlayMethod'],
+    () => [appSetting['player.togglePlayMethod'], appSetting['player.isCrossfade'], appSetting['player.isVolumeFade']],
     () => {
-      if (!preloadMusicInfo.info || preloadMusicInfo.info.isTempPlay) return
       resetRandomNextMusicInfo()
-      preloadMusicInfo.info = null
-      preloadMusicInfo.preProgress = playProgress.nowPlayTime
+      invalidate()
     }
   )
-
-  window.app_event.on('setProgress', setProgress)
-  window.app_event.on('musicToggled', handleSetPlayInfo)
-
-  const rOnTimeupdate = onTimeupdate(() => {
+  window.app_event.on('setProgress', invalidate)
+  window.app_event.on('musicToggled', reset)
+  const offTimeupdate = onTimeupdate(() => {
+    if (!isPlay.value || !playMusicInfo.musicInfo || window.lx.isPlayedStop) return
     const time = getCurrentTime()
-    const duration = playProgress.maxPlayTime
-    if (duration > 10 && duration - time < 10 && !preloadMusicInfo.info) {
-      void preloadNextMusicUrl(time)
-    }
+    const duration = getDuration()
+    const remaining = (duration - time) * 1000 / getPlaybackRate()
+    if (!Number.isFinite(remaining) || remaining <= 20) return
+    if (remaining < 10000 && !nextInfo && !loading && time - lastAttempt >= 3) void preload(time)
+    if (
+      appSetting['player.isCrossfade'] && appSetting['player.isVolumeFade'] &&
+      duration * 1000 / getPlaybackRate() > appSetting['player.volumeFadeDuration'] &&
+      remaining <= appSetting['player.volumeFadeDuration'] &&
+      nextInfo && nextSrc && !switching && isResourcePreloaded(nextSrc)
+    ) void crossfade()
   })
-
   onBeforeUnmount(() => {
-    rOnTimeupdate()
-    window.app_event.off('setProgress', setProgress)
-    window.app_event.off('musicToggled', handleSetPlayInfo)
+    offTimeupdate()
+    window.app_event.off('setProgress', invalidate)
+    window.app_event.off('musicToggled', reset)
+    invalidate()
   })
 }

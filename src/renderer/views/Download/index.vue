@@ -1,5 +1,8 @@
 <template>
   <div :class="$style.download">
+    <div :class="$style.heading">
+      <h2>{{ $t('download') }}</h2>
+    </div>
     <div :class="$style.header">
       <base-tab v-model="activeTab" :class="$style.tab" :list="tabs" />
     </div>
@@ -302,6 +305,20 @@ export default {
   justify-content: center;
   position: relative;
 }
+
+.heading {
+  .mixin-page-header();
+  h2 {
+    .mixin-page-title();
+  }
+}
+.header {
+  flex: none;
+  padding: 0 18px 12px;
+}
+.download > .content {
+  padding: 0 18px;
+}
 .playIcon {
   position: absolute;
   left: 0;
@@ -333,8 +350,18 @@ export default {
   align-items: center;
 
   p {
-    font-size: 24px;
+    font-size: 16px;
     color: var(--color-font-label);
+  }
+  .mixin-page-empty();
+}
+@media (max-width: 700px) {
+  .header {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .download > .content {
+    padding: 0 12px;
   }
 }
 </style>

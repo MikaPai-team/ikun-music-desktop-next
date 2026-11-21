@@ -4,14 +4,19 @@
       v-for="item in list"
       :key="item[itemKey]"
       :class="[$style.listItem, { [$style.active]: modelValue == item[itemKey] }]"
-      tabindex="-1"
-      role="tab"
-      :aria-label="item[itemLabel]"
-      ignore-tip
-      :aria-selected="modelValue == item[itemKey]"
-      @click="handleToggle(item[itemKey])"
+      role="presentation"
     >
-      <span :class="$style.label">{{ item[itemLabel] }}</span>
+      <button
+        type="button"
+        :class="$style.label"
+        role="tab"
+        :aria-label="item[itemLabel]"
+        :aria-selected="modelValue == item[itemKey]"
+        ignore-tip
+        @click="handleToggle(item[itemKey])"
+      >
+        {{ item[itemLabel] }}
+      </button>
     </li>
   </ul>
 </template>
@@ -58,65 +63,54 @@ export default {
 </script>
 
 <style lang="less" module>
-@import '@renderer/assets/styles/layout.less';
-
 .list {
   display: flex;
-  flex-flow: row nowrap;
-  font-size: 12px;
-  gap: 25px;
-  padding: 0 15px;
-
-  &.left {
-    justify-content: flex-start;
-  }
-  &.center {
-    justify-content: center;
-  }
-  &.right {
-    justify-content: flex-end;
-  }
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  font-size: 13px;
+}
+.left {
+  justify-content: flex-start;
+}
+.center {
+  justify-content: center;
+}
+.right {
+  justify-content: flex-end;
 }
 .listItem {
   display: block;
-  // padding: 5px 15px;
-  cursor: pointer;
-  transition: color @transition-normal;
-  color: var(--color-text-secondary);
-
-  &:hover {
-    color: var(--color-text-primary);
-  }
-
-  &.active {
-    color: var(--color-text-primary);
-    cursor: default;
-
-    > .label {
-      &:after {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-  }
 }
-
 .label {
   display: block;
-  position: relative;
-  padding: 8px 0;
-  &:after {
-    .mixin-after();
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    height: 3px;
-    border-radius: 2px;
-    transform: translateY(-4px);
-    opacity: 0;
-    background-color: var(--color-accent);
-    transition: @transition-fast;
-    transition-property: transform, opacity;
-  }
+  box-sizing: border-box;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-control-stroke);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-font-label);
+  font: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+  transition:
+    background-color 0.1s ease,
+    border-color 0.1s ease;
+}
+.label:hover {
+  background: var(--color-control-fill-hover);
+  color: var(--color-font);
+}
+.label:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.active .label {
+  border-color: var(--color-primary);
+  background: var(--color-primary-alpha-900);
+  color: var(--color-font);
+  font-weight: 600;
 }
 </style>

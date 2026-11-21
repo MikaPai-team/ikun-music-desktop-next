@@ -163,88 +163,54 @@ export default {
 </script>
 
 <style lang="less" module>
-@import '@renderer/assets/styles/layout.less';
-
 .pagination {
   display: inline-block;
-  background-color: var(--color-button-background);
-  // border-top-left-radius: 8px;
-  border-radius: @radius-border;
   ul {
     display: flex;
-    flex-flow: row nowrap;
-    // border: .0625rem solid @theme_color2;
-    // border-radius: .3125rem;
-    li {
-      // margin-right: @padding;
-      // color: var(--color-button-font);
-      // border: .0625rem solid @theme_line;
-      // border-radius: .3125rem;
-      transition: 0.4s ease;
-      transition-property: all;
-      line-height: 1.2;
-      display: flex;
-      // border-right: none;
-      svg {
-        height: 1em;
-      }
-      span,
-      button {
-        display: block;
-        padding: 7px 12px;
-        line-height: 1.2;
-        color: var(--color-button-font);
-        font-size: 13px;
-      }
-      &.active {
-        span {
-          background-color: var(--color-button-background-selected);
-        }
-      }
-      button {
-        background-color: transparent;
-        border: none;
-        cursor: pointer;
-        outline: none;
-        transition: background-color 0.3s ease;
-        &:hover {
-          background-color: var(--color-button-background-hover);
-        }
-        &:active {
-          background-color: var(--color-button-background-active);
-        }
-      }
-      &.disabled {
-        span {
-          opacity: 0.3;
-        }
-      }
-      &:first-child {
-        span,
-        button {
-          border-top-left-radius: @radius-border;
-          border-bottom-left-radius: @radius-border;
-        }
-        // border-right: .0625rem solid @theme_line;
-      }
-      &:last-child {
-        span,
-        button {
-          border-top-right-radius: @radius-border;
-          border-bottom-right-radius: @radius-border;
-        }
-        // border-right: .0625rem solid @theme_line;
-      }
-      &:first-child,
-      &:last-child,
-      &.first,
-      &.last {
-        span,
-        button {
-          line-height: 0;
-        }
-      }
-    }
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
   }
+  li {
+    display: flex;
+  }
+  span,
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 34px;
+    min-height: 34px;
+    padding: 6px 10px;
+    border: 1px solid var(--color-control-stroke);
+    border-radius: var(--radius-control);
+    color: var(--color-font);
+    background: transparent;
+    font-size: 13px;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+  }
+  svg {
+    height: 1em;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:hover {
+    background: var(--color-control-fill-hover);
+  }
+  button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+.active span {
+  border-color: var(--color-primary);
+  background: var(--color-primary-alpha-900);
+  font-weight: 600;
+}
+.disabled span {
+  opacity: 0.4;
 }
 </style>

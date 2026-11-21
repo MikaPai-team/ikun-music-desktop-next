@@ -1,4 +1,7 @@
 const modules = {
+  lastfm: {
+    request: 'request',
+  },
   common: {
     get_env_params: 'get_env_params',
     deeplink: 'deeplink',
@@ -189,6 +192,7 @@ for (const moduleName of Object.keys(modules) as Array<keyof typeof modules>) {
 // }
 
 export const CMMON_EVENT_NAME = modules.common
+export const LASTFM_EVENT_NAME = modules.lastfm
 export const PLAYER_EVENT_NAME = modules.player
 export const DISLIKE_EVENT_NAME = modules.dislike
 export const WIN_MAIN_RENDERER_EVENT_NAME = modules.winMain
