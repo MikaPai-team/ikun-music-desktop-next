@@ -8,7 +8,7 @@
 - 改动仅在桌面歌词共用取色函数，横排、竖排、逐字与整行歌词沿用现有调用链。封面色相、至少 10% 原色、透明背景、用户透明度和 0.35px 描边继续保留。项目及锁文件同步升级为 `3.10.0-fix.2`。
 - 验证：人工阅读取色与歌词填色调用链，`git diff --check` 通过；已补充复杂背景、采样失败与低透明度回归用例，按用户要求未运行任何测试或自检。47 份此前修改 / 未跟踪文件 SHA-256 比对一致，既有交接内容保留。
 - 编译：`npm run build:main`、`npm run build:renderer`、`npm run build:renderer-lyric`、`npm run build:renderer-scripts` 与 `npm run pack:win:setup:x64` 均成功。生成 `build/ikun-music-desktop-v3.10.0-fix.2-x64-Setup.exe`，97,742,699 字节，SHA-256 为 `74b69ebbc93e9badbc539d77bcdabfdbbcf7947d1ae6757f7ee9eb047d7d2813`。项目、锁文件与包内版本一致；包内主程序、worker、renderer、歌词与 API 五份脚本均与本次编译输出一致，`latest.yml` 的版本、文件名、大小和 SHA-512 均核对一致。保留此前安装包。
-- 提交 / 推送：编译完成，尚未提交或推送；本次仅提交修复、版本号、待运行回归用例与本交接条目，目标为 `next/main`（`MikaPai-team/ikun-music-desktop-next`），此前工作区修改与未跟踪文件继续保留。
+- 提交 / 推送：修复提交 `f232d8d`（`fix: 保证桌面歌词回退颜色可区分`）已成功推送到 `next/main`（`MikaPai-team/ikun-music-desktop-next`）；本条实际状态补记随交接文档提交。本次仅纳入修复、版本号、待运行回归用例与本交接条目，此前工作区修改与未跟踪文件继续保留。
 - 已知限制：真实桌面视觉效果尚未实测；复杂背景下无法同时保证两种字色对所有背景点达到固定可读性要求，极低透明度无法保证 2:1 色差。本地安装包包含工作区此前未提交的改动；本次未发布 Release 或修改发布工作流，其他平台未编译。
 
 ## 本次修复（2026-11-20，3.10.0-fix.1，动态歌词色调与主题简化）
