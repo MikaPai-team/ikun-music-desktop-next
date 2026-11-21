@@ -1,8 +1,9 @@
 import { autoUpdater } from 'electron-updater'
 import { log, isWin } from '@common/utils'
-import { mainOn } from '@common/mainIpc'
+import { mainOn, mainHandle } from '@common/mainIpc'
 import { isExistWindow, sendEvent } from './index'
 import { WIN_MAIN_RENDERER_EVENT_NAME } from '@common/ipcNames'
+import { prepareUpdateSession } from './updateProxy'
 
 autoUpdater.logger = log
 autoUpdater.autoDownload = false
@@ -78,6 +79,21 @@ const handleSendEvent = (action: WaitEvent) => {
 export default () => {
   autoUpdater.setFeedURL({ provider: 'github', owner: 'MikaPai-team', repo: 'ikun-music-desktop-next' })
   autoUpdater.allowPrerelease = false
+  mainHandle<'latest' | 'history', unknown>(
+    WIN_MAIN_RENDERER_EVENT_NAME.update_get_release_info,
+    async ({ params }) => {
+      if (params !== 'latest' && params !== 'history') throw new Error('Invalid release endpoint')
+      const ses = await prepareUpdateSession()
+      const url = 'https://api.github.com/repos/MikaPai-team/ikun-music-desktop-next/releases' +
+        (params === 'latest' ? '/latest' : '?per_page=100')
+      const response = await ses.fetch(url, {
+        headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'IKUN-Music' },
+        signal: AbortSignal.timeout(10000),
+      })
+      if (!response.ok) throw new Error(`GitHub release request failed: ${response.status}`)
+      return response.json()
+    }
+  )
   autoUpdater.on('checking-for-update', () => {
     sendStatusToWindow('Checking for update...')
   })
@@ -107,12 +123,18 @@ export default () => {
 
   mainOn(WIN_MAIN_RENDERER_EVENT_NAME.update_check, () => {
     console.log('check')
-    checkUpdate()
+    void checkUpdate()
   })
 
-  mainOn(WIN_MAIN_RENDERER_EVENT_NAME.update_download_update, () => {
+  mainOn(WIN_MAIN_RENDERER_EVENT_NAME.update_download_update, async () => {
     if (!autoUpdater.isUpdaterActive()) return
-    void autoUpdater.downloadUpdate()
+    try {
+      await prepareUpdateSession()
+    } catch (error) {
+      autoUpdater.emit('error', error)
+      return
+    }
+    void autoUpdater.downloadUpdate().catch(() => {})
   })
 
   mainOn(WIN_MAIN_RENDERER_EVENT_NAME.quit_update, () => {
@@ -124,7 +146,7 @@ export default () => {
   })
 }
 
-const checkUpdate = () => {
+const checkUpdate = async () => {
   // if (!isFirstCheckedUpdate) {
   //   if (waitEvent.length) {
   //     waitEvent.forEach((event, index) => {
@@ -142,7 +164,13 @@ const checkUpdate = () => {
   if (isWin && process.arch.includes('arm')) {
     handleSendEvent({ type: WIN_MAIN_RENDERER_EVENT_NAME.update_error, info: 'failed' })
   } else {
+    try {
+      await prepareUpdateSession()
+    } catch (error) {
+      autoUpdater.emit('error', error)
+      return
+    }
     autoUpdater.autoDownload = global.lx.appSetting['common.tryAutoUpdate']
-    void autoUpdater.checkForUpdates()
+    void autoUpdater.checkForUpdates().catch(() => {})
   }
 }

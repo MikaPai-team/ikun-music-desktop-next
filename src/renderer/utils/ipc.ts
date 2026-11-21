@@ -89,6 +89,13 @@ export const checkUpdate = () => {
   rendererSend(WIN_MAIN_RENDERER_EVENT_NAME.update_check)
 }
 
+export const getUpdateReleaseInfo = async (endpoint: 'latest' | 'history') => {
+  return rendererInvoke<'latest' | 'history', unknown>(
+    WIN_MAIN_RENDERER_EVENT_NAME.update_get_release_info,
+    endpoint
+  )
+}
+
 export const downloadUpdate = () => {
   rendererSend(WIN_MAIN_RENDERER_EVENT_NAME.update_download_update)
 }

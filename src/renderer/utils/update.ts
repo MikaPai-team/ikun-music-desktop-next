@@ -1,8 +1,4 @@
-import { httpGet } from './request'
-import pkg from '../../../package.json'
-
-const repository = new URL(pkg.repository.url.replace(/^git\+/, '')).pathname.replace(/\.git$/, '')
-const releasesUrl = `https://api.github.com/repos${repository}/releases`
+import { getUpdateReleaseInfo } from './ipc'
 
 interface Release {
   tag_name: string
@@ -16,29 +12,19 @@ const isRelease = (info: Release) =>
   (info.body == null || typeof info.body === 'string')
 const toVersionInfo = (info: Release) => ({ version: info.tag_name.replace(/^v/, ''), desc: info.body ?? '' })
 
-const request = async (url: string, retryNum = 0): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    httpGet(
-      url,
-      {
-        timeout: 10000,
-        headers: { Accept: 'application/vnd.github+json' },
-      },
-      (err: Error | null, resp: any, body: any) => {
-        if (err || resp?.statusCode != 200) {
-          ++retryNum >= 3
-            ? reject(err || new Error(resp?.statusMessage || String(resp?.statusCode)))
-            : request(url, retryNum).then(resolve).catch(reject)
-        } else resolve(body)
-      }
-    )
-  })
+const request = async (endpoint: 'latest' | 'history', retryNum = 0): Promise<any> => {
+  try {
+    return await getUpdateReleaseInfo(endpoint)
+  } catch (error) {
+    if (++retryNum >= 3) throw error
+    return request(endpoint, retryNum)
+  }
 }
 
 export const getVersionInfo = async (): Promise<LX.VersionInfo & { history: LX.VersionInfo[] }> => {
-  const latest: Release = await request(`${releasesUrl}/latest`)
+  const latest: Release = await request('latest')
   if (!isRelease(latest)) throw new Error('Invalid GitHub release')
-  const releases: unknown = await request(`${releasesUrl}?per_page=100`).catch(() => [])
+  const releases: unknown = await request('history').catch(() => [])
   return {
     ...toVersionInfo(latest),
     history: Array.isArray(releases)
