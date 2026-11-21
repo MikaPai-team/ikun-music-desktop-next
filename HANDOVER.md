@@ -7,7 +7,7 @@
 - 更新代理与 fix.n 版本兼容修正源码已直接推送 next/main，提交依次为 1feda75、c2b6394、a96ec94；本轮明确获用户授权直接推 main，不走 alpha-test。最终构建源码对应 a96ec94，本条交接状态随文档提交推送 main。
 - 最终 main、renderer、renderer-lyric、renderer-scripts 四目标编译以及 Windows x64 Setup 打包均成功。安装包为 build/ikun-music-desktop-v3.11.0-fix.1-x64-Setup.exe，97,796,672 字节，SHA-256 为 f71cc1dd3cfb6cb2ac105dfed57e8a54aede4e2ecb441db32a982ed43c3f758c；项目 / 锁文件 / 包内版本均为 3.11.0-fix.1，应用 PE 为 x64（8664）。
 - 包内七份主程序、renderer、歌词、API 和 worker 脚本与最终编译输出一致，系统代理刷新、版本回退保护及发布说明 IPC 已包含；latest.yml 的版本、文件名、大小和 SHA-512 一致。更新仓库仍为 MikaPai-team/ikun-music-desktop-next；安装包没有 Authenticode 签名。
-- 按用户要求未运行自动测试或回归自检。新增 update-proxy.test.cjs 待执行；验证范围为编译、打包和产物核对，未在真实 Electron 中切换系统代理、PAC、手动代理或下载安装更新。编译后向用户请求确认产物是否有问题，目前尚未收到本修复版确认。
+- 按用户要求未运行自动测试或回归自检。新增 update-proxy.test.cjs 待执行；验证范围为编译、打包和产物核对，未在真实 Electron 中切换系统代理、PAC、手动代理或下载安装更新。编译后已询问用户产物是否有问题，用户于 2026-11-21 明确回复「功能正常」。此为用户确认反馈，没有补做自动测试或代理实机测试。
 - 先前 3.11.0 已在用户确认功能正常后合入 main 并正式发布： https://github.com/MikaPai-team/ikun-music-desktop-next/releases/tag/v3.11.0 ，公开安装包下载为 HTTP 200、Content-Length 97,797,821。最新正式 Release 仍为 3.11.0，本轮修复版未发布 Release。
 - 原有未跟踪测试、desktopLyricColor.check.mjs 和两张调试图片继续保留且未提交；本轮没有删除旧产物，先前自动审批拒绝的清理仍未完成。3.11.0 更新元数据另存为 build/latest-3.11.0.yml，当前 latest.yml 对应 fix.1。
 
