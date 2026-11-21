@@ -2,6 +2,17 @@
 
 更新日期：2026-11-21
 
+## 完成状态（2026-11-21，3.11.0 等待产物确认）
+
+- 本轮交叠渐变、主题色块和更新源改动已完成。源码快照 c93307a 与暂停后预加载修正 71becd0 均已推送 alpha-test；main 仍为 2ee399791fdfb7d93a2bf84a67448067aa9e4bdd，未合入新源码。本条编译 / 发布状态文档随单独提交推送 alpha-test，构建源码仍对应 71becd010d3b509781fdedaefa508af2e9083254。
+- main、renderer、renderer-lyric、renderer-scripts 四个编译目标及 pack:win:setup:x64 均成功；renderer 在预加载修正推送后重新编译。生成 build/ikun-music-desktop-v3.11.0-x64-Setup.exe，97,797,821 字节，SHA-256 为 8a7df88be083c4e7aac3b52b4f8c6bca1443acbc93c1bb695788f0e69be09a22。
+- 包内项目版本为 3.11.0，应用 PE 架构为 x64（8664）；app-update.yml 和仓库 URL 指向 MikaPai-team/ikun-music-desktop-next。包内七份主程序、renderer、歌词、API 和 worker 脚本与编译输出一致；交叠设置和主题色块已包含。latest.yml 的文件名、大小和 SHA-512 一致。安装包没有 Authenticode 签名；保留未跟踪文件使现有 getGitInfo 不显示软件内的提交 ID，未更改该构建规则。
+- 3.11.0 已上传草稿 Release，ID 453509973，地址 https://github.com/MikaPai-team/ikun-music-desktop-next/releases/tag/untagged-d9362c9ca761d41f59bc 。安装包、blockmap、latest.yml 均为 uploaded，远端大小和 SHA-256 与本地一致。草稿尚未正式发布或设为最新；需用户确认产物没问题后，再合入 main 并正式发布。用户尚未确认。
+- fix.2 正式 Release 已发布，ID 453506543，附件摘要匹配，公开下载返回 HTTP 200 和正确 Content-Length 97,742,699；该版本仍为最新正式版，其旧更新源不因发布新源码而改变。
+- 按用户要求未运行任何自动测试或回归自检，新增 player-crossfade.test.cjs 待执行；本轮验证为编译、打包和产物 / Release 核对，没有实际安装、听感或真实主题界面验证。未改动的 40 份此前源码与未跟踪文件 SHA-256 均保持一致；旧未跟踪测试和调试图片仍未提交。
+- 旧安装包和旧 blockmap 删除两次被自动审批以 blocked by policy 拒绝，无法删除，因此此前版本产物仍在 build 中；没有借用其他工具绕过删除限制。保留 fix.2 文件及独立元数据备份 latest-3.10.0-fix.2.yml；新 latest.yml 对应 3.11.0。旧产物清理尚未完成。
+
+
 ## 过程状态补记（2026-11-21）
 
 - 源码快照 c93307a 已推送 next/alpha-test；main 未更新。暂停后重新加载下一首预缓存的补充修正随本条提交。
