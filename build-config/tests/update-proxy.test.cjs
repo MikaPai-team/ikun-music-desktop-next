@@ -80,3 +80,24 @@ test('configuration failures propagate and later requests can retry without a di
   await p.prepare()
   assert.equal(p.configurations[0].mode, 'system')
 })
+
+test('fork fix versions sort after their base release without changing beta ordering', () => {
+  const source = readFileSync(path.join(__dirname, '../../src/common/utils/index.ts'), 'utf8')
+  const start = source.indexOf('export function compareVer(')
+  const end = source.indexOf('export { log }', start)
+  const compiled = ts.transpileModule(source.slice(start, end), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText
+  const exports = {}
+  vm.runInNewContext(compiled, { exports })
+  const compare = exports.compareVer
+  for (const [current, next, expected] of [
+    ['3.11.0', '3.11.0-fix.1', -1],
+    ['3.11.0-fix.1', '3.11.0', 1],
+    ['3.11.0-fix.1', '3.11.0-fix.2', -1],
+    ['3.11.0-fix.2', '3.11.0-fix.1', 1],
+    ['3.11.0-fix.10', '3.12.0', -1],
+    ['3.11.0-fix.1', '3.11.0-fix.1', 0],
+    ['3.11.0-beta.1', '3.11.0', -1],
+  ]) assert.equal(compare(current, next), expected)
+})

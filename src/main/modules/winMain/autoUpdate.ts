@@ -1,5 +1,5 @@
 import { autoUpdater } from 'electron-updater'
-import { log, isWin } from '@common/utils'
+import { log, isWin, compareVer } from '@common/utils'
 import { mainOn, mainHandle } from '@common/mainIpc'
 import { isExistWindow, sendEvent } from './index'
 import { WIN_MAIN_RENDERER_EVENT_NAME } from '@common/ipcNames'
@@ -79,6 +79,11 @@ const handleSendEvent = (action: WaitEvent) => {
 export default () => {
   autoUpdater.setFeedURL({ provider: 'github', owner: 'MikaPai-team', repo: 'ikun-music-desktop-next' })
   autoUpdater.allowPrerelease = false
+  // SemVer orders fix.n before its base; the shared comparison permits only real upgrades.
+  autoUpdater.allowDowngrade = true
+  const isUpdateSupported = autoUpdater.isUpdateSupported.bind(autoUpdater)
+  autoUpdater.isUpdateSupported = (info) =>
+    compareVer(autoUpdater.currentVersion.version, info.version) < 0 && isUpdateSupported(info)
   mainHandle<'latest' | 'history', unknown>(
     WIN_MAIN_RENDERER_EVENT_NAME.update_get_release_info,
     async ({ params }) => {

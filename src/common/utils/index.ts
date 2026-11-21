@@ -18,6 +18,10 @@ export const getPlatform = (platform: NodeJS.Platform = process.platform) => {
 
 // https://stackoverflow.com/a/53387532
 export function compareVer(currentVer: string, targetVer: string): -1 | 0 | 1 {
+  // This fork's fix.n versions are updates after their base release.
+  const normalizeFix = (version: string) => version.replace(/^(\d+\.\d+\.\d+)-fix\.(\d+)$/, '$1.$2')
+  currentVer = normalizeFix(currentVer)
+  targetVer = normalizeFix(targetVer)
   // treat non-numerical characters as lower version
   // replacing them with a negative number based on charcode of each character
   const fix = (s: string) => `.${s.toLowerCase().charCodeAt(0) - 2147483647}.`
