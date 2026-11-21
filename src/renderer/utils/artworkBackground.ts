@@ -120,7 +120,10 @@ export const getDesktopLyricForeground = (
           ))
           : 2
         if (ratio >= targetContrast && separation >= 2) return color
-        const score = Math.min(ratio / targetContrast, 1) * 100 + Math.min(separation, 2)
+        // 回退先保证唱词色差，再选最易读的色调，避免两种字色一起趋近同一明暗端。
+        const score = separation >= 2
+          ? 2 + Math.min(ratio / targetContrast, 1)
+          : separation / 2
         if (score > bestScore) {
           best = color
           bestScore = score
