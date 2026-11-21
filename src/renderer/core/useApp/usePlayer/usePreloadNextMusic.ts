@@ -79,6 +79,7 @@ export default () => {
     }
   )
   window.app_event.on('setProgress', invalidate)
+  window.app_event.on('pause', invalidate)
   window.app_event.on('musicToggled', reset)
   const offTimeupdate = onTimeupdate(() => {
     if (!isPlay.value || !playMusicInfo.musicInfo || window.lx.isPlayedStop) return
@@ -97,6 +98,7 @@ export default () => {
   onBeforeUnmount(() => {
     offTimeupdate()
     window.app_event.off('setProgress', invalidate)
+    window.app_event.off('pause', invalidate)
     window.app_event.off('musicToggled', reset)
     invalidate()
   })

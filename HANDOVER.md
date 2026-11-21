@@ -2,6 +2,13 @@
 
 更新日期：2026-11-21
 
+## 过程状态补记（2026-11-21）
+
+- 源码快照 c93307a 已推送 next/alpha-test；main 未更新。暂停后重新加载下一首预缓存的补充修正随本条提交。
+- 现有 fix.2 已发布正式 Release：ID 453506543，地址 https://github.com/MikaPai-team/ikun-music-desktop-next/releases/tag/v3.10.0-fix.2 。安装包 97,742,699 字节，SHA-256 为 74b69ebbc93e9badbc539d77bcdabfdbbcf7947d1ae6757f7ee9eb047d7d2813；安装包、blockmap 和 latest.yml 均已 uploaded，远端大小与摘要一致。
+- 3.11.0 的 main、renderer-lyric 和 renderer-scripts 编译成功；renderer 正在编译，x64 安装包尚未生成。未执行测试。
+- 旧产物清理两次被自动审批拒绝，均仅返回 blocked by policy，第二次已改为明确列出的绝对文件路径，仍被拒绝；未删除任何旧产物。已另存 fix.2 更新元数据为 build/latest-3.10.0-fix.2.yml，后续新包不会覆盖其本地备份。
+
 ## 本次功能（2026-11-21，3.11.0，交叠渐变与更新源）
 
 - 歌曲新增交叠渐入渐出，默认开启，可在播放设置关闭；自然结束和手动下一首、上一首、点选歌曲均接入。复用原有两种时长和下一首预加载，双音频分别渐变、共用音效，同步静音、倍速、音量与输出设备；旧曲事件不驱动新曲进度、歌词或 Last.fm。暂停、停止、拖动、关闭开关及快速切歌清理旧曲尾音。无下一首、短曲、同曲循环或预加载未完成时沿用普通衔接。
