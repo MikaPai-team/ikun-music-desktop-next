@@ -54,7 +54,10 @@ export default {
     let barHeight
     let x = 0
     let isPlaying = false
-    let animationFrameId
+    let animationFrameId = null
+    let requestPending = false
+    let lastRequestTime = 0
+    const frameInterval = 1000 / 30
 
     let num
     let mult
@@ -69,11 +72,25 @@ export default {
     // })
 
     useEvent((event) => {
-      if (event.action == 'send_analyser_data_array') {
-        // console.log(event.action)
+      if (event.action == 'send_analyser_data_array' && requestPending) {
+        requestPending = false
+        if (!isPlaying) return
         renderFrame(event.data)
       }
     })
+
+    const requestFrame = () => {
+      if (!isPlaying || requestPending) return
+      requestPending = true
+      lastRequestTime = performance.now()
+      getAnalyserDataArray()
+    }
+    const nextFrame = (time) => {
+      animationFrameId = null
+      if (!isPlaying) return
+      if (time - lastRequestTime >= frameInterval) requestFrame()
+      else animationFrameId = window.requestAnimationFrame(nextFrame)
+    }
 
     // https://developer.mozilla.org/zh-CN/docs/Web/API/AnalyserNode/smoothingTimeConstant
     const renderFrame = (dataArray) => {
@@ -114,11 +131,13 @@ export default {
         x += barWidth
       }
 
-      animationFrameId = null
-      if (isPlaying) animationFrameId = window.requestAnimationFrame(getAnalyserDataArray)
+      if (isPlaying && animationFrameId == null) {
+        animationFrameId = window.requestAnimationFrame(nextFrame)
+      }
     }
 
     const handlePlay = () => {
+      if (isPlaying || !ctx) return
       isPlaying = true
       // analyser.fftSize = 256
       // bufferLength = analyser.frequencyBinCount
@@ -126,11 +145,12 @@ export default {
       barWidth = getBarWidth(WIDTH)
       // dataArray = new Uint8Array(bufferLength)
       // renderFrame()
-      getAnalyserDataArray()
+      requestFrame()
     }
 
     const handlePause = () => {
-      if (animationFrameId) window.cancelAnimationFrame(animationFrameId)
+      if (animationFrameId != null) window.cancelAnimationFrame(animationFrameId)
+      animationFrameId = null
       isPlaying = false
     }
 
@@ -159,6 +179,9 @@ export default {
     onBeforeUnmount(() => {
       handlePause()
       window.removeEventListener('resize', handleResize)
+      dom_canvas.value.width = 0
+      dom_canvas.value.height = 0
+      ctx = null
     })
 
     onMounted(() => {

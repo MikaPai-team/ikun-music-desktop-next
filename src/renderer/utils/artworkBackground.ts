@@ -100,11 +100,22 @@ export const getDesktopLyricForeground = (
 ) => {
   const samples = backgrounds.length ? backgrounds : [BLACK, WHITE]
   const alpha = clamp01(opacity)
-  const contrast = (color: Rgb) =>
-    Math.min(
-      ...samples.map((background) => getContrastRatio(mix(background, color, alpha), background))
-    )
+  const backgroundLuminances = samples.map(getLuminance)
+  const ratioOf = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+  // 复用亮度缓冲，候选色循环不再反复分配 RGB 对象和 map 数组。
+  const luminances = new Float64Array(samples.length)
+  const otherLuminances = new Float64Array(samples.length)
+  const fillLuminances = (color: Rgb, values: Float64Array) => {
+    for (let i = 0; i < samples.length; i++) {
+      const background = samples[i]
+      values[i] =
+        0.2126 * toLinear(background.r + (color.r - background.r) * alpha) +
+        0.7152 * toLinear(background.g + (color.g - background.g) * alpha) +
+        0.0722 * toLinear(background.b + (color.b - background.b) * alpha)
+    }
+  }
   const pickTone = (targetContrast: number, other?: Rgb) => {
+    if (other) fillLuminances(other, otherLuminances)
     let best = source
     let bestScore = -1
     for (let step = 0; step <= 18; step++) {
@@ -113,12 +124,13 @@ export const getDesktopLyricForeground = (
         const color = round(mix(source, target, step / 20))
         if (Math.max(color.r, color.g, color.b) === 0 || Math.min(color.r, color.g, color.b) === 255) continue
         if (other && color.r === other.r && color.g === other.g && color.b === other.b) continue
-        const ratio = contrast(color)
-        const separation = other
-          ? Math.min(...samples.map((background) =>
-            getContrastRatio(mix(background, color, alpha), mix(background, other, alpha))
-          ))
-          : 2
+        fillLuminances(color, luminances)
+        let ratio = Infinity
+        let separation = other ? Infinity : 2
+        for (let i = 0; i < samples.length; i++) {
+          ratio = Math.min(ratio, ratioOf(luminances[i], backgroundLuminances[i]))
+          if (other) separation = Math.min(separation, ratioOf(luminances[i], otherLuminances[i]))
+        }
         if (ratio >= targetContrast && separation >= 2) return color
         // 回退先保证唱词色差，再选最易读的色调，避免两种字色一起趋近同一明暗端。
         const score = separation >= 2

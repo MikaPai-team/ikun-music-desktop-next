@@ -209,7 +209,8 @@ export const getBackgroundSample = (): Promise<LX.DesktopLyric.BackgroundSample 
       lyricWindow.setContentProtection(true)
       const sources = await desktopCapturer.getSources({
         types: ['screen'],
-        thumbnailSize: { width: 960, height: 540 },
+        // 最终仅使用 16x8 色点，避免每 1.5 秒分配高分辨率屏幕缩略图。
+        thumbnailSize: { width: 320, height: 180 },
         fetchWindowIcons: false,
       })
       if (lyricWindow.isDestroyed() || browserWindow !== lyricWindow) return null

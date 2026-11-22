@@ -36,9 +36,15 @@ export default () => {
     sampling = true
     try {
       const sample = await getBackgroundSample()
-      if (active) background.value = sample
+      const previous = background.value
+      // 周期采样产生新对象；颜色未变时保留旧引用，避免重算和歌词重绘。
+      if (active && (sample?.colors.length !== previous?.colors.length ||
+        sample?.colors.some((color, index) => {
+          const old = previous?.colors[index]
+          return !old || color.r !== old.r || color.g !== old.g || color.b !== old.b
+        }))) background.value = sample
     } catch {
-      if (active) background.value = null
+      if (active && background.value != null) background.value = null
     } finally {
       sampling = false
     }

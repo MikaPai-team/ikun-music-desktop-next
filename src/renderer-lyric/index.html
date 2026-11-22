@@ -28,10 +28,10 @@
           .join('')}}`
       }
       window.setLyricColor = (colors) => {
-        console.log(colors)
-        window.dom_style_lyric.innerText = `:root {${Object.entries(colors)
+        const css = `:root {${Object.entries(colors)
           .map(([key, value]) => `${key}:${value};`)
           .join('')}}`
+        if (window.dom_style_lyric.innerText !== css) window.dom_style_lyric.innerText = css
       }
       document.body.appendChild(window.dom_style_lyric)
 
