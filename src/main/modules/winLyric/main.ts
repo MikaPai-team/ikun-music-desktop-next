@@ -195,6 +195,7 @@ export const getBounds = (): Electron.Rectangle => {
 let backgroundCapture: Promise<LX.DesktopLyric.BackgroundSample | null> | null = null
 
 export const getBackgroundSample = (): Promise<LX.DesktopLyric.BackgroundSample | null> => {
+  if (global.lx.appSetting['desktopLyric.autoColor'] === false) return Promise.resolve(null)
   const lyricWindow = browserWindow
   // shortcut: 旧 Windows / 其他平台不能可靠排除歌词窗口，使用细描边；有原生排除捕获 API 后再接入。
   if (!isWin || Number(release().split('.')[2]) < 19041 || !lyricWindow?.isVisible()) {
@@ -209,11 +210,15 @@ export const getBackgroundSample = (): Promise<LX.DesktopLyric.BackgroundSample 
       lyricWindow.setContentProtection(true)
       const sources = await desktopCapturer.getSources({
         types: ['screen'],
-        // 最终仅使用 16x8 色点，避免每 1.5 秒分配高分辨率屏幕缩略图。
+        // 最终仅使用 16x8 色点，避免周期性分配高分辨率屏幕缩略图。
         thumbnailSize: { width: 320, height: 180 },
         fetchWindowIcons: false,
       })
-      if (lyricWindow.isDestroyed() || browserWindow !== lyricWindow) return null
+      if (
+        lyricWindow.isDestroyed() ||
+        browserWindow !== lyricWindow ||
+        global.lx.appSetting['desktopLyric.autoColor'] === false
+      ) return null
       const current = lyricWindow.getContentBounds()
       if (
         current.x !== bounds.x || current.y !== bounds.y ||

@@ -1,5 +1,6 @@
 import path from 'node:path'
 import os from 'node:os'
+import { desktopLyricColorInterval } from './utils/desktopLyricColor'
 
 const isMac = process.platform == 'darwin'
 const isWin = process.platform == 'win32'
@@ -89,6 +90,8 @@ const defaultSetting: LX.AppSetting = {
   'desktopLyric.isAlwaysOnTopLoop': false,
   'desktopLyric.isShowTaskbar': false,
   'desktopLyric.audioVisualization': false,
+  'desktopLyric.autoColor': true,
+  'desktopLyric.autoColorInterval': desktopLyricColorInterval.default,
   'desktopLyric.fullscreenHide': true,
   'desktopLyric.pauseHide': true,
   'desktopLyric.width': 450,

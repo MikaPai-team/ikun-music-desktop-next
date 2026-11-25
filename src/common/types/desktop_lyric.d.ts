@@ -8,6 +8,8 @@ declare namespace LX {
       'desktopLyric.isShowTaskbar': LX.AppSetting['desktopLyric.isShowTaskbar']
       'desktopLyric.pauseHide': LX.AppSetting['desktopLyric.pauseHide']
       'desktopLyric.audioVisualization': LX.AppSetting['desktopLyric.audioVisualization']
+      'desktopLyric.autoColor': LX.AppSetting['desktopLyric.autoColor']
+      'desktopLyric.autoColorInterval': LX.AppSetting['desktopLyric.autoColorInterval']
       'desktopLyric.width': LX.AppSetting['desktopLyric.width']
       'desktopLyric.height': LX.AppSetting['desktopLyric.height']
       'desktopLyric.x': LX.AppSetting['desktopLyric.x']

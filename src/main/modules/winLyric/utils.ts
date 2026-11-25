@@ -56,6 +56,8 @@ export const watchConfigKeys = [
   'desktopLyric.isShowTaskbar',
   'desktopLyric.pauseHide',
   'desktopLyric.audioVisualization',
+  'desktopLyric.autoColor',
+  'desktopLyric.autoColorInterval',
   'desktopLyric.width',
   'desktopLyric.height',
   'desktopLyric.x',

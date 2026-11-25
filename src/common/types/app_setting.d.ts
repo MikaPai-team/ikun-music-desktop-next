@@ -391,6 +391,12 @@ declare global {
        */
       'desktopLyric.audioVisualization': boolean
 
+      /** 根据封面和桌面背景自动调整桌面歌词颜色 */
+      'desktopLyric.autoColor': boolean
+
+      /** 桌面背景取色检测间隔，单位为毫秒 */
+      'desktopLyric.autoColorInterval': number
+
       /**
        * 是否在全屏时隐藏歌词
        */

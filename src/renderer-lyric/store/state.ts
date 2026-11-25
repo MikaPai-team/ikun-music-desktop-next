@@ -1,4 +1,5 @@
 import { ref, shallowReactive } from '@common/utils/vueTools'
+import { desktopLyricColorInterval } from '@common/utils/desktopLyricColor'
 
 export const setting = shallowReactive<LX.DesktopLyric.Config>({
   'desktopLyric.enable': false,
@@ -8,6 +9,8 @@ export const setting = shallowReactive<LX.DesktopLyric.Config>({
   'desktopLyric.isShowTaskbar': true,
   'desktopLyric.pauseHide': false,
   'desktopLyric.audioVisualization': false,
+  'desktopLyric.autoColor': true,
+  'desktopLyric.autoColorInterval': desktopLyricColorInterval.default,
   'desktopLyric.width': 450,
   'desktopLyric.height': 300,
   'desktopLyric.x': null,
