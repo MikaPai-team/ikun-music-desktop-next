@@ -5,10 +5,10 @@
 - 桌面歌词新增自动取色开关和背景检测间隔，默认开启、间隔 1500 毫秒，输入范围 500–30000 毫秒。关闭时停止后续背景采样，并直接使用用户设定的已播放、未播放和阴影颜色。已有配置沿用新默认值。
 - 设置页导航从十个分组归并为六个分组，新增全局设置项搜索，点击结果可直接打开所属设置页；重排桌面歌词行为、版式、取色、字体和颜色选项。新提示及分类名称已补充简体中文、繁体中文与英文。
 - package.json 与 package-lock.json 版本同步从 3.11.0-fix.2 更新为 3.12.0。
-- 提交/推送：源码提交 90ceccd（feat: add desktop lyric color settings）已推送 next/alpha-test。本次构建核验状态由后续交接文档提交补记；未合入 main。
-- 编译/产物：main、renderer、renderer-lyric、renderer-scripts 四个 webpack 目标及 Windows x64 NSIS Setup 打包均成功。安装包为 build/ikun-music-desktop-v3.12.0-x64-Setup.exe，97,763,170 字节，SHA-256 为 0dfd2cc82f759f4e026643bf926649b368ced841a4c715035762a47141b02bd9；包内应用版本为 3.12.0.0，PE 架构为 x64（8664）。build/latest.yml 的版本、文件名、大小和 SHA-512 与安装包一致。安装包未签署 Authenticode 证书。
+- 提交/推送：源码提交 90ceccda34c0f4da5f54ab5784bcefe39880c198 已推送 next/alpha-test。用户明确要求本次直接合入 main，再手动验证自动更新；next/main 已快进到 4b7d0ddd69d45f99852287b6462cd136420ea60e。标签 v3.12.0 指向同一提交，与构建源码仅相差交接文档。本次发布状态在 main 补记。
+- 编译/产物：main、renderer、renderer-lyric、renderer-scripts 四个 webpack 目标及 Windows x64 NSIS Setup 打包均成功。安装包为 build/ikun-music-desktop-v3.12.0-x64-Setup.exe，97,763,170 字节，SHA-256 为 0dfd2cc82f759f4e026643bf926649b368ced841a4c715035762a47141b02bd9；包内版本 3.12.0，应用 PE 架构为 x64（8664），四个主要包内脚本与 dist 中的本次编译输出一致。build/latest.yml 的版本、文件名、大小和 SHA-512 与安装包一致。安装包没有 Authenticode 签名。
 - 按用户要求未运行自动测试，也未在 Electron 界面手动验证。构建日志含 Browserslist 数据过期和 Node 子进程弃用警告，未阻止编译或打包。
-- 用户明确要求本次直接并入 main，再通过正式 Release 手动验证自动更新。当前合并、发布和手动验证尚未完成。
+- Release 已按前两份正式版本的格式发布并设为最新，ID 458152995，地址 https://github.com/MikaPai-team/ikun-music-desktop-next/releases/tag/v3.12.0 。安装包、blockmap 和 latest.yml 已公开，三个附件的下载均返回 HTTP 200，大小和 GitHub SHA-256 与本地一致。最新正式 Release API 返回 v3.12.0，公开更新入口下载的 latest.yml 与本地字节一致，返回版本 3.12.0。应用内检测、下载及安装待用户手动验证。
 - 保留现有未跟踪测试与调试文件，未纳入提交、修改或删除。
 
 更新日期：2026-11-25
